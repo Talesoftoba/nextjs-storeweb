@@ -25,7 +25,7 @@ const handler = NextAuth({
         if (!isValid) return null;
 
         // Return user object for NextAuth
-        return { id: user.id, email: user.email };
+        return { id: user.id, email: user.email, role: user.role };
       },
     }),
   ],
@@ -34,14 +34,25 @@ const handler = NextAuth({
 
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id; // attach user.id to the JWT token
+      if (user){
+         token.id = user.id;
+         token.role = user.role;
+        } // attach user.id to the JWT token
       return token;
+      
     },
 
     async session({ session, token }) {
-      if (session.user && token.id) {
+      if (session.user && token.id && token.role) {
         // Extend session with user ID
-        (session.user as { id?: string }).id = token.id as string;
+      session.user.id = token.id as string;
+
+      if (token.role === "USER" || token.role === "ADMIN") {
+      session.user.role = token.role;
+    } else {
+      session.user.role = "USER"; // default fallback
+    }
+  
       }
       return session;
     },
