@@ -1,0 +1,109 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Users
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  password  String
+  name      String?
+  role      Role       @default(USER)
+  cartItems CartItem[]
+  orders    Order[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+}
+
+// Roles for user types
+enum Role {
+  USER
+  ADMIN
+}
+
+// Products
+model Product {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  price       Int
+  image       String
+  stock       Int        @default(0)
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Cart items
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  quantity  Int      @default(1)
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Orders
+model Order {
+  id         String      @id @default(cuid())
+  userId     String
+  total      Int
+  status     OrderStatus @default(PENDING)
+  orderItems OrderItem[]
+  payment    Payment?
+  user       User        @relation(fields: [userId], references: [id])
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+// Order items
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Order status
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+// Stripe Payment
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String        @unique
+  stripePaymentId String      @unique
+  amount        Int
+  status        PaymentStatus @default(PENDING)
+  paymentIntent String?       // Stripe PaymentIntent ID if needed
+  order         Order         @relation(fields: [orderId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// Payment status
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
