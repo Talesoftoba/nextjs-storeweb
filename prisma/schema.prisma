@@ -35,6 +35,7 @@ model Product {
   price       Int
   image       String
   stock       Int        @default(0)
+  category    String?
   cartItems   CartItem[]
   orderItems  OrderItem[]
   createdAt   DateTime   @default(now())
@@ -107,3 +108,4 @@ enum PaymentStatus {
   SUCCESS
   FAILED
 }
+
