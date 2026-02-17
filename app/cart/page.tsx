@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
+import Link from "next/link";
 
 type Product = {
   id: string;
@@ -165,9 +166,12 @@ export default function CartPage() {
           >
             Clear Cart
           </button>
+
+          <Link href="/checkout">
           <button className="px-4 py-2 bg-green-600 text-white rounded">
             Checkout
           </button>
+          </Link>
         </div>
       </div>
     </div>

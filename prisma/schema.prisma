@@ -56,12 +56,22 @@ model CartItem {
   @@unique([userId, productId])
 }
 
-// Orders
 model Order {
-  id         String      @id @default(cuid())
-  userId     String
-  total      Int
-  status     OrderStatus @default(PENDING)
+  id              String      @id @default(cuid())
+  userId          String
+  total           Int
+  status          OrderStatus @default(PENDING)
+
+  shippingName     String?
+  shippingEmail    String?
+  shippingAddress1 String?
+  shippingAddress2 String?
+  shippingCity     String?
+  shippingState    String?
+  shippingZip      String?
+  shippingCountry  String?
+  shippingPhone    String?
+
   orderItems OrderItem[]
   payment    Payment?
   user       User        @relation(fields: [userId], references: [id])
