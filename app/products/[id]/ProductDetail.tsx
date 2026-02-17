@@ -52,7 +52,7 @@ export default function ProductDetail({ product }: { product: Product }) {
             alt={product.name}
             width={400}
             height={400}
-            className="w-full max-w-[300px] sm:max-w-[400px] h-auto object-cover rounded"
+            className="w-full max-w-75 sm:max-w-100 h-auto object-cover rounded"
           />
         </div>
 
