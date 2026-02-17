@@ -19,25 +19,28 @@ export default function ProductDetail({ product }: { product: Product }) {
   const [quantity, setQuantity] = useState(1);
   const router = useRouter();
 
-  const handleAddToCart = async () => {
-    try {
-      const res = await fetch("/api/cart", {
-        method: "POST",
-        body: JSON.stringify({ productId: product.id, quantity }),
-        headers: { "Content-Type": "application/json" },
-      });
+ const handleAddToCart = async () => {
+  try {
+    const res = await fetch("/api/cart", {
+      method: "POST",
+      body: JSON.stringify({ productId: product.id, quantity }),
+      headers: { "Content-Type": "application/json" },
+    });
 
-      if (res.ok) {
-        toast.success("Added to cart!");
-        router.push("/cart"); // redirect
-      } else {
-        toast.error("Failed to add to cart");
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Error adding to cart");
+    if (res.ok) {
+      // Trigger global event so CartBadge can update
+      window.dispatchEvent(new CustomEvent("cartUpdated", { detail: quantity }));
+
+      toast.success("Added to cart!");
+      router.push("/cart"); // redirect if you still want
+    } else {
+      toast.error("Failed to add to cart");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error("Error adding to cart");
+  }
+};
 
   return (
     <div className="max-w-6xl mx-auto p-4">

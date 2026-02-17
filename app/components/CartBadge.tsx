@@ -1,64 +1,55 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, forwardRef, useImperativeHandle } from "react";
-import toast, { Toaster } from "react-hot-toast";
+import { useEffect, useState } from "react";
+import { FiShoppingCart } from "react-icons/fi";
 
-// Ref type: exposes a method to increment badge
-export type CartBadgeHandle = {
-  handleAddedToCart: (quantity?: number) => void;
-};
+// Define the type of a single cart item
+interface CartItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  // You can expand with product info if returned from API
+}
 
-// Props type (not used, just satisfy TS)
-type CartBadgeProps = object;
+export default function CartBadge() {
+  const [count, setCount] = useState<number>(0);
 
-const CartBadge = forwardRef<CartBadgeHandle, CartBadgeProps>((_props, ref) => {
-  const [count, setCount] = useState(0);
-
-  // Fetch cart count from API
   const fetchCartCount = async () => {
     try {
       const res = await fetch("/api/cart");
       if (!res.ok) throw new Error("Failed to fetch cart");
-      const data: { quantity: number }[] = await res.json();
 
+      const data: CartItem[] = await res.json(); // ✅ strongly typed
       const total = data.reduce((acc, item) => acc + item.quantity, 0);
       setCount(total);
     } catch (err) {
-      console.error("Error fetching cart count:", err);
+      console.error(err);
     }
   };
 
   useEffect(() => {
     fetchCartCount();
-  }, []);
 
-  // Expose handleAddedToCart() to parent via ref
-  useImperativeHandle(ref, () => ({
-    handleAddedToCart(quantity: number = 1) {
-      setCount((prev) => prev + quantity);
-      toast.success("Added to cart!");
-    },
-  }));
+    const handleCartUpdate = (e: Event) => {
+      const detail = (e as CustomEvent<number>).detail; // ✅ typed
+      setCount(prev => prev + detail);
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdate);
+    return () => window.removeEventListener("cartUpdated", handleCartUpdate);
+  }, []);
 
   return (
     <div className="relative">
-      {/* Hot toast notifications */}
-      <Toaster position="top-right" />
-
-      <Link href="/cart">
-        <span className="text-2xl cursor-pointer">🛒</span>
-
+      <Link href="/cart" className="relative flex items-center">
+        <FiShoppingCart className="w-7 h-7 text-gray-800 hover:text-gray-600 transition-colors" />
         {count > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
             {count}
           </span>
         )}
       </Link>
     </div>
   );
-});
-
-CartBadge.displayName = "CartBadge";
-
-export { CartBadge };
+}

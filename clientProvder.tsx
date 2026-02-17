@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
+import CartBadge from "@/app/components/CartBadge";
 
 export default function ClientProvider({ children }: { children: React.ReactNode }) {
   return (
@@ -10,10 +11,14 @@ export default function ClientProvider({ children }: { children: React.ReactNode
         {/* Header / Navigation */}
         <header className="bg-blue-600 text-white p-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">My App</h1>
-          <nav className="space-x-4">
+          
+          <nav className="space-x-4 flex items-center">
             <Link href="/login">Login</Link>
             <Link href="/signup">SignUp</Link>
             <Link href="/dashboard">Dashboard</Link>
+            
+            {/* Cart Badge */}
+            <CartBadge />
           </nav>
         </header>
 
