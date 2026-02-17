@@ -14,7 +14,7 @@ function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handlePayment = async (e: React.FormEvent) => {
+  const handlePayment = async (e: React. SubmitEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
