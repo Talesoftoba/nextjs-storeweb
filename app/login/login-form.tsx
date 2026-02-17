@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link"; // ✅ import Link
 
 export default function LoginForm() {
   const [loading, setLoading] = useState(false);
@@ -25,10 +26,12 @@ export default function LoginForm() {
   }
 
   return (
+    <div className="max-w-sm mx-auto">
     <form
       onSubmit={handleSubmit}
       className="space-y-5 max-w-sm w-full"
     >
+        <h1 className="text-2xl font-bold text-center text-gray-800">Login</h1>
       {error && (
         <p className="rounded-md bg-red-50 text-red-600 px-3 py-2 text-sm">
           Invalid email or password
@@ -86,5 +89,14 @@ export default function LoginForm() {
         {loading ? "Logging in..." : "Log in"}
       </button>
     </form>
+
+<p className="mt-4 text-sm text-gray-700 text-center">
+        Don&apos;t have an account?{" "}
+        <Link href="/signup" className="text-blue-600 hover:underline">
+          Sign up
+        </Link>
+      </p>
+    
+      </div>
   );
 }
