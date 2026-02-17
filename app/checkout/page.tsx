@@ -10,7 +10,6 @@ type Product = {
   name: string;
   price: number;
   image: string;
-  category?: string | null;
 };
 
 type CartItem = {
@@ -24,6 +23,7 @@ export default function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [shipping, setShipping] = useState({
     fullName: "",
+    email: "",
     address: "",
     city: "",
     zip: "",
@@ -33,21 +33,20 @@ export default function CheckoutPage() {
   const router = useRouter();
 
   // Fetch cart items
-  const fetchCart = async () => {
-    try {
-      const res = await fetch("/api/cart");
-      if (!res.ok) throw new Error("Failed to fetch cart");
-      const data = await res.json();
-      setItems(data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to fetch cart");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const fetchCart = async () => {
+      try {
+        const res = await fetch("/api/cart");
+        if (!res.ok) throw new Error("Failed to fetch cart");
+        const data = await res.json();
+        setItems(data);
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to fetch cart");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchCart();
   }, []);
 
@@ -56,19 +55,18 @@ export default function CheckoutPage() {
     0
   );
 
-  // Handle shipping input
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShipping({ ...shipping, [e.target.name]: e.target.value });
   };
 
-  // Submit order and redirect to payment
+  // ✅ Create order and redirect to payment page
   const handleProceedToPayment = async () => {
     if (items.length === 0) {
       toast.error("Your cart is empty!");
       return;
     }
 
-    if (!shipping.fullName || !shipping.address || !shipping.city || !shipping.zip || !shipping.country) {
+    if (!shipping.fullName || !shipping.email || !shipping.address || !shipping.city || !shipping.zip || !shipping.country) {
       toast.error("Please fill in all shipping fields");
       return;
     }
@@ -82,10 +80,10 @@ export default function CheckoutPage() {
 
       if (!res.ok) throw new Error("Failed to create order");
 
-      const { orderId } = await res.json();
-
+      const data = await res.json();
       toast.success("Order created! Redirecting to payment...");
-      router.push(`/payment?orderId=${orderId}`);
+      // Redirect to payment page with orderId and clientSecret in query
+      router.push(`/payment?orderId=${data.orderId}&clientSecret=${data.clientSecret}`);
     } catch (err) {
       console.error(err);
       toast.error("Failed to create order");
@@ -93,8 +91,7 @@ export default function CheckoutPage() {
   };
 
   if (loading) return <p className="p-6">Loading checkout...</p>;
-  if (items.length === 0)
-    return <p className="p-6 text-center">Your cart is empty.</p>;
+  if (items.length === 0) return <p className="p-6 text-center">Your cart is empty.</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
@@ -104,10 +101,7 @@ export default function CheckoutPage() {
       {/* Cart Summary */}
       <div className="space-y-4">
         {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex items-center gap-4 border rounded p-4"
-          >
+          <div key={item.id} className="flex items-center gap-4 border rounded p-4">
             <Image
               src={item.product.image || "/placeholder.png"}
               alt={item.product.name}
@@ -129,54 +123,21 @@ export default function CheckoutPage() {
       {/* Shipping Form */}
       <div className="border rounded p-4 space-y-3">
         <h2 className="font-bold text-xl">Shipping Details</h2>
-        <input
-          type="text"
-          name="fullName"
-          placeholder="Full Name"
-          value={shipping.fullName}
-          onChange={handleChange}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <input
-          type="text"
-          name="address"
-          placeholder="Address"
-          value={shipping.address}
-          onChange={handleChange}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <input
-          type="text"
-          name="city"
-          placeholder="City"
-          value={shipping.city}
-          onChange={handleChange}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <input
-          type="text"
-          name="zip"
-          placeholder="ZIP / Postal Code"
-          value={shipping.zip}
-          onChange={handleChange}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
-        <input
-          type="text"
-          name="country"
-          placeholder="Country"
-          value={shipping.country}
-          onChange={handleChange}
-          className="w-full border rounded px-3 py-2"
-          required
-        />
+        {["fullName","email","address","city","zip","country"].map((field) => (
+          <input
+            key={field}
+            type={field === "email" ? "email" : "text"}
+            name={field}
+            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+            value={shipping[field as keyof typeof shipping]}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+        ))}
       </div>
 
-      {/* Total & Payment */}
+      {/* Total & Proceed Button */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <p className="text-xl font-bold">Total: ${totalPrice.toFixed(2)}</p>
         <button

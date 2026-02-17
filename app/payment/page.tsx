@@ -1,17 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  CardElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
 import toast, { Toaster } from "react-hot-toast";
+import { useState } from "react";
 
-// Load Stripe publishable key
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId: string }) {
@@ -20,42 +14,35 @@ function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
-
-    setLoading(true);
 
     const card = elements.getElement(CardElement);
     if (!card) return;
 
-    // Confirm payment with Stripe
-    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+    setLoading(true);
+
+    const result = await stripe.confirmCardPayment(clientSecret, {
       payment_method: { card },
     });
 
-    if (error) {
-      toast.error(error.message || "Payment failed");
-      setLoading(false);
-      return;
-    }
-
-    if (paymentIntent?.status === "succeeded") {
+    if (result.error) {
+      toast.error(result.error.message || "Payment failed");
+    } else if (result.paymentIntent?.status === "succeeded") {
       toast.success("Payment successful!");
-      
-      // Redirect to order success page
-     router.push(`/order-success?orderId=${orderId}`);
+      router.push(`/order-success/${orderId}`);
     }
 
     setLoading(false);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handlePayment} className="space-y-4 max-w-md mx-auto">
       <CardElement className="p-2 border rounded" />
       <button
         type="submit"
-        disabled={!stripe || loading}
+        disabled={loading}
         className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
       >
         {loading ? "Processing..." : "Pay Now"}
@@ -66,54 +53,19 @@ function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const orderId = searchParams.get("orderId");
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const clientSecret = searchParams.get("clientSecret");
 
-  useEffect(() => {
-    if (!orderId) {
-      toast.error("Missing order ID");
-      router.push("/cart");
-      return;
-    }
-
-    const fetchClientSecret = async () => {
-      try {
-        const res = await fetch("/api/stripe/payment_intents", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orderId }),
-        });
-        const data = await res.json();
-
-        if (!data.clientSecret) throw new Error("Failed to initialize payment");
-        setClientSecret(data.clientSecret);
-      } catch (err) {
-        console.error(err);
-        toast.error("Could not initialize payment. Try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchClientSecret();
-  }, [orderId, router]);
+  if (!orderId || !clientSecret)
+    return <p className="p-6 text-center">Missing order or payment info.</p>;
 
   return (
-    <div className="max-w-md mx-auto my-20 p-6 border rounded shadow">
+    <div className="max-w-5xl mx-auto p-6 space-y-6">
       <Toaster position="top-right" />
-      <h1 className="text-2xl font-bold mb-4 text-center">Payment</h1>
-
-      {loading ? (
-        <p className="text-center">Loading payment details...</p>
-      ) : clientSecret ? (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <CheckoutForm clientSecret={clientSecret} orderId={orderId!} />
-        </Elements>
-      ) : (
-        <p className="text-center text-red-500">Failed to load payment form.</p>
-      )}
+      <h1 className="text-3xl font-bold text-center">Payment</h1>
+      <Elements stripe={stripePromise} options={{ clientSecret }}>
+        <CheckoutForm clientSecret={clientSecret} orderId={orderId} />
+      </Elements>
     </div>
   );
 }
