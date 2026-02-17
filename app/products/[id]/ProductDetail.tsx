@@ -31,7 +31,7 @@ export default function ProductDetail({ product }: { product: Product }) {
       // Trigger global event so CartBadge can update
       window.dispatchEvent(new CustomEvent("cartUpdated", { detail: quantity }));
 
-      toast.success("Added to cart!");
+     
       router.push("/cart"); // redirect if you still want
     } else {
       toast.error("Failed to add to cart");

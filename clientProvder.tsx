@@ -4,6 +4,8 @@ import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
 import CartBadge from "@/app/components/CartBadge";
 
+
+
 export default function ClientProvider({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
@@ -19,6 +21,7 @@ export default function ClientProvider({ children }: { children: React.ReactNode
             
             {/* Cart Badge */}
             <CartBadge />
+          
           </nav>
         </header>
 

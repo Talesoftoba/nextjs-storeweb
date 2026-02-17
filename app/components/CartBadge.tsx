@@ -3,45 +3,64 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FiShoppingCart } from "react-icons/fi";
+import { Toaster } from "react-hot-toast";
+import { useSession } from "next-auth/react";
 
-// Define the type of a single cart item
-interface CartItem {
-  id: string;
-  productId: string;
-  quantity: number;
-  // You can expand with product info if returned from API
-}
+type CartItem = { quantity: number };
 
 export default function CartBadge() {
-  const [count, setCount] = useState<number>(0);
-
-  const fetchCartCount = async () => {
-    try {
-      const res = await fetch("/api/cart");
-      if (!res.ok) throw new Error("Failed to fetch cart");
-
-      const data: CartItem[] = await res.json(); // ✅ strongly typed
-      const total = data.reduce((acc, item) => acc + item.quantity, 0);
-      setCount(total);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const { data: session } = useSession();
+  const [count, setCount] = useState(0);
 
   useEffect(() => {
-    fetchCartCount();
+    const initializeCart = async () => {
+      if (!session?.user) {
+        setCount(0);
+        return;
+      }
 
+      try {
+        const res = await fetch("/api/cart");
+        if (!res.ok) {
+          setCount(0);
+          return;
+        }
+
+        const data: CartItem[] = await res.json();
+        const total = data.reduce((acc, item) => acc + item.quantity, 0);
+        setCount(total);
+      } catch (err) {
+        console.error("Failed to fetch cart:", err);
+        setCount(0);
+      }
+    };
+
+    initializeCart();
+
+    // ✅ ADD ITEM
     const handleCartUpdate = (e: Event) => {
-      const detail = (e as CustomEvent<number>).detail; // ✅ typed
+      const detail = (e as CustomEvent).detail as number;
       setCount(prev => prev + detail);
+     
+    };
+
+    // ✅ CLEAR CART
+    const handleCartCleared = () => {
+      setCount(0);
     };
 
     window.addEventListener("cartUpdated", handleCartUpdate);
-    return () => window.removeEventListener("cartUpdated", handleCartUpdate);
-  }, []);
+    window.addEventListener("cartCleared", handleCartCleared);
+
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+      window.removeEventListener("cartCleared", handleCartCleared);
+    };
+  }, [session]);
 
   return (
     <div className="relative">
+      <Toaster position="top-right" />
       <Link href="/cart" className="relative flex items-center">
         <FiShoppingCart className="w-7 h-7 text-gray-800 hover:text-gray-600 transition-colors" />
         {count > 0 && (

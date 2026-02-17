@@ -3,6 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { FiLogOut } from "react-icons/fi";
+import { signOut } from "next-auth/react";
+
 
 type Product = {
   id: string;
@@ -20,16 +23,16 @@ export default function DashboardClient({ initialProducts }: Props) {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
 
-  // Derive unique categories directly
- const categories = Array.from(
-  new Set(
-    initialProducts
-      .map((p) => p.category)
-      .filter((cat): cat is string => Boolean(cat))
-  )
-);
+  // Unique categories for filter
+  const categories = Array.from(
+    new Set(
+      initialProducts
+        .map((p) => p.category)
+        .filter((cat): cat is string => Boolean(cat))
+    )
+  );
 
-  // Filter products based on search and category
+  // Filter products by search & category
   const filteredProducts = initialProducts.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) &&
@@ -38,9 +41,21 @@ export default function DashboardClient({ initialProducts }: Props) {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">Products Dashboard</h1>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Products Dashboard</h1>
+        <div className="flex items-center gap-4">
+         
+          <button
+            onClick={() => signOut({ callbackUrl: "/" })}
+            className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500 transition"
+          >
+            <FiLogOut className="w-5 h-5" /> Logout
+          </button>
+        </div>
+      </div>
 
-      {/* Search and Category Filter */}
+      {/* Search & Category Filter */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <input
           type="text"

@@ -73,17 +73,24 @@ export default function CartPage() {
     }
   };
 
-  const clearCart = async () => {
-    try {
-      const res = await fetch("/api/cart", { method: "PUT" });
-      if (!res.ok) throw new Error("Failed to clear cart");
-      toast.success("Cart cleared");
-      fetchCart();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to clear cart");
-    }
-  };
+ const clearCart = async () => {
+  try {
+    const res = await fetch("/api/cart", { method: "PUT" });
+    if (!res.ok) throw new Error("Failed to clear cart");
+
+    // 1. Notify header
+    window.dispatchEvent(new CustomEvent("cartCleared"));
+
+    // 2. Clear cart locally
+    setItems([]);
+
+    // 3. Show page toast
+    toast.success("Cart cleared");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to clear cart");
+  }
+};
 
   const totalPrice = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,

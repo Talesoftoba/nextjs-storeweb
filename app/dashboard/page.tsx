@@ -1,9 +1,20 @@
-import { db } from "../lib/db"; 
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth/next";
+import { GET as nextAuthHandler } from "../api/auth/[...nextauth]/route"; // adjust path
+import { db } from "../lib/db";
 import DashboardClient from "./DashboardClient";
-import { Product } from "@prisma/client";
+import { Session } from "next-auth";
 
 export default async function DashboardPage() {
-  const productsDb:Product[] = await db.product.findMany();
+  // Get the session and type it
+  const session: Session | null = await getServerSession(nextAuthHandler);
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  // Fetch all products
+  const productsDb = await db.product.findMany();
 
   const products = productsDb.map((p) => ({
     id: p.id,
