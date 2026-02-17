@@ -36,6 +36,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     console.log("Creating product in database...");
+    
     const product = await db.product.create({
       data: { name, description, price, stock, category, image: imageUrl },
     });
