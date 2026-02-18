@@ -10,15 +10,20 @@ generator client {
 
 // Users
 model User {
-  id        String     @id @default(cuid())
-  email     String     @unique
-  password  String
-  name      String?
-  role      Role       @default(USER)
-  cartItems CartItem[]
-  orders    Order[]
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id                 String     @id @default(cuid())
+  email              String     @unique
+  password           String
+  name               String?
+  role               Role       @default(USER)
+
+  cartItems          CartItem[]
+  orders             Order[]
+
+  resetTokenHash     String?    @unique
+  resetTokenExpiry   DateTime?
+
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
 }
 
 // Roles for user types
