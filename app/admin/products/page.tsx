@@ -1,8 +1,25 @@
+// app/admin/products/page.tsx
 import { db } from "@/app/lib/db";
 import Link from "next/link";
 import Image from "next/image";
+import { getServerSession } from "next-auth/next";
+import { redirect } from "next/navigation";
 
 export default async function ProductsPage() {
+  // ✅ Protect page: Only admins can access
+  const session = await getServerSession();
+  if (!session?.user?.email) {
+    // Not logged in → redirect to login
+    redirect("/login");
+  }
+
+  // Fetch user to check role
+  const user = await db.user.findUnique({ where: { email: session.user.email } });
+  if (!user || user.role !== "ADMIN") {
+    // Not an admin → redirect to home
+    redirect("/");
+  }
+
   // Fetch products from Prisma
   const products = await db.product.findMany();
 
@@ -40,7 +57,7 @@ export default async function ProductsPage() {
             <p className="text-gray-600">Category: {product.category}</p>
             <p className="text-gray-800 font-bold">Price: ${product.price}</p>
             <p className="text-gray-600">Stock: {product.stock}</p>
-            <p className="text-gray-600">Describtion: {product.description}</p>
+            <p className="text-gray-600">Description: {product.description}</p>
           </div>
         ))}
       </div>

@@ -1,10 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function NewProductPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState<number | "">("");
@@ -13,6 +16,14 @@ export default function NewProductPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // ✅ Admin protection
+  useEffect(() => {
+    if (status === "loading") return; // wait for session
+    if (!session || session.user.role !== "ADMIN") {
+      router.push("/"); // redirect non-admins
+    }
+  }, [session, status, router]);
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -35,17 +46,14 @@ export default function NewProductPage() {
 
       if (!res.ok) throw new Error("Failed to create product");
 
- router.push("/admin/products");
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      setError(err.message);
-    } else {
-      setError("Unknown error occurred");
+      router.push("/admin/products");
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError("Unknown error occurred");
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="max-w-md mx-auto p-4">
