@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
-import type { Product as PrismaProduct } from "@prisma/client";
 
 export default async function ProductsPage() {
   // ✅ Protect page: Only admins can access
@@ -14,8 +13,8 @@ export default async function ProductsPage() {
   const user = await db.user.findUnique({ where: { email: session.user.email } });
   if (!user || user.role !== "ADMIN") redirect("/");
 
-  // ✅ Fetch products using Prisma type
-  const products: PrismaProduct[] = await db.product.findMany();
+  // ✅ Fetch products — let TypeScript infer the type
+  const products = await db.product.findMany();
 
   return (
     <div className="p-4 max-w-5xl mx-auto">
@@ -40,6 +39,7 @@ export default async function ProductsPage() {
                 width={400}
                 height={300}
                 className="object-cover mb-4 rounded"
+                loading="eager"
               />
             ) : (
               <div className="w-full h-48 bg-gray-200 mb-4 flex items-center justify-center rounded">
