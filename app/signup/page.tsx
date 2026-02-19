@@ -9,10 +9,10 @@ export default function SignupPage() {
   const [state, formAction] = React.useActionState(signupAction, initialState);
 
   return (
-    <div className="max-w-sm mx-auto ">
+    <div className="max-w-sm mx-auto mt-10 ">
       <form
         action={formAction}
-        className="bg-white shadow-md rounded-xl p-8 w-full max-w-sm space-y-5"
+        className="bg-white shadow-md rounded-xl p-8 w-full max-w-sm space-y-5 border-y-2"
       >
         <h1 className="text-2xl font-bold text-center text-gray-800">Create Account</h1>
 
