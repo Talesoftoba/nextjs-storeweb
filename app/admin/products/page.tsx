@@ -5,6 +5,19 @@ import Image from "next/image";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 
+// ✅ Define a type that matches your Prisma Product model
+type ProductType = {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  image: string;
+  stock: number;
+  category: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
 export default async function ProductsPage() {
   // ✅ Protect page: Only admins can access
   const session = await getServerSession();
@@ -13,8 +26,8 @@ export default async function ProductsPage() {
   const user = await db.user.findUnique({ where: { email: session.user.email } });
   if (!user || user.role !== "ADMIN") redirect("/");
 
-  // ✅ Fetch products — let TypeScript infer the type
-  const products = await db.product.findMany();
+  // ✅ Fetch products with type annotation
+  const products: ProductType[] = await db.product.findMany();
 
   return (
     <div className="p-4 max-w-5xl mx-auto">
@@ -30,7 +43,7 @@ export default async function ProductsPage() {
       {products.length === 0 && <p>No products yet.</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {products.map((product) => (
+        {products.map((product: ProductType) => (
           <div key={product.id} className="border rounded shadow p-4 flex flex-col">
             {product.image ? (
               <Image
@@ -39,7 +52,7 @@ export default async function ProductsPage() {
                 width={400}
                 height={300}
                 className="object-cover mb-4 rounded"
-                loading="eager"
+                loading="eager" // improves Largest Contentful Paint (LCP) for the first visible image
               />
             ) : (
               <div className="w-full h-48 bg-gray-200 mb-4 flex items-center justify-center rounded">
@@ -48,8 +61,10 @@ export default async function ProductsPage() {
             )}
 
             <h2 className="text-xl font-semibold">{product.name}</h2>
-            <p className="text-gray-600">Category: {product.category ?? "Uncategorized"}</p>
-            <p className="text-gray-800 font-bold">Price: ${product.price}</p>
+            <p className="text-gray-600">
+              Category: {product.category ?? "Uncategorized"}
+            </p>
+            <p className="text-gray-800 font-bold">Price: ${product.price.toFixed(2)}</p>
             <p className="text-gray-600">Stock: {product.stock}</p>
             <p className="text-gray-600">
               Description: {product.description ?? "No description"}
