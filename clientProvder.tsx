@@ -11,7 +11,7 @@ export default function ClientProvider({ children }: { children: React.ReactNode
 
         {/* Header */}
         <header className="bg-gray-600 text-gray-300 p-4 flex justify-between items-center shrink-0">
-          <h1 className="text-xl font-bold">MarketStore</h1>
+         <h1 className="text-xl font-bold"><Link href="/">MarketStore</Link></h1>
 
           <nav className="space-x-4 flex items-center">
             <Link href="/dashboard">Dashboard</Link>
