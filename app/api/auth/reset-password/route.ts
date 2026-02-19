@@ -1,3 +1,4 @@
+// app/api/auth/reset-password/route.ts
 import { NextResponse } from "next/server";
 import { db } from "@/app/lib/db";
 import bcrypt from "bcryptjs";
@@ -9,22 +10,18 @@ export async function POST(req: Request) {
 
     if (!token || !password) {
       return NextResponse.json(
-        { error: "Invalid request" },
+        { error: "Token and password are required" },
         { status: 400 }
       );
     }
 
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
+    // Hash the token to match what is stored in DB
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     const user = await db.user.findFirst({
       where: {
         resetTokenHash: tokenHash,
-        resetTokenExpiry: {
-          gt: new Date(),
-        },
+        resetTokenExpiry: { gt: new Date() }, // token not expired
       },
     });
 
@@ -35,8 +32,10 @@ export async function POST(req: Request) {
       );
     }
 
+    // Hash the new password
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // Update user password and clear reset token
     await db.user.update({
       where: { id: user.id },
       data: {
@@ -50,7 +49,7 @@ export async function POST(req: Request) {
       message: "Password successfully reset",
     });
   } catch (error) {
-    console.error(error);
+    console.error("Reset password error:", error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
