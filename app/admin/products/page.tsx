@@ -4,24 +4,18 @@ import Link from "next/link";
 import Image from "next/image";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
+import type { Product as PrismaProduct } from "@prisma/client";
 
 export default async function ProductsPage() {
   // ✅ Protect page: Only admins can access
   const session = await getServerSession();
-  if (!session?.user?.email) {
-    // Not logged in → redirect to login
-    redirect("/login");
-  }
+  if (!session?.user?.email) redirect("/login");
 
-  // Fetch user to check role
   const user = await db.user.findUnique({ where: { email: session.user.email } });
-  if (!user || user.role !== "ADMIN") {
-    // Not an admin → redirect to home
-    redirect("/");
-  }
+  if (!user || user.role !== "ADMIN") redirect("/");
 
-  // Fetch products from Prisma
-  const products = await db.product.findMany();
+  // ✅ Fetch products using Prisma type
+  const products: PrismaProduct[] = await db.product.findMany();
 
   return (
     <div className="p-4 max-w-5xl mx-auto">
@@ -54,10 +48,12 @@ export default async function ProductsPage() {
             )}
 
             <h2 className="text-xl font-semibold">{product.name}</h2>
-            <p className="text-gray-600">Category: {product.category}</p>
+            <p className="text-gray-600">Category: {product.category ?? "Uncategorized"}</p>
             <p className="text-gray-800 font-bold">Price: ${product.price}</p>
             <p className="text-gray-600">Stock: {product.stock}</p>
-            <p className="text-gray-600">Description: {product.description}</p>
+            <p className="text-gray-600">
+              Description: {product.description ?? "No description"}
+            </p>
           </div>
         ))}
       </div>
