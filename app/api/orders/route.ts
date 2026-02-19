@@ -3,9 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import Stripe from "stripe";
 import { db } from "@/app/lib/db";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // import your authOptions
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover", // ✅ Fixed for TypeScript
+  apiVersion: "2026-01-28.clover",
 });
 
 type Shipping = {
@@ -24,9 +25,10 @@ type CartItem = {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession();
+    // ✅ Get session using authOptions for proper typing
+    const session = await getServerSession(authOptions);
 
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -43,10 +45,10 @@ export async function POST(req: NextRequest) {
       0
     );
 
-    // 2️⃣ Create the order in DB
+    // 2️⃣ Create order in DB linked by userId
     const order = await db.order.create({
       data: {
-        user: { connect: { email: session.user.email } },
+        userId: session.user.id,
         total,
         status: "PENDING",
         shippingName: shipping.fullName,
@@ -66,12 +68,12 @@ export async function POST(req: NextRequest) {
       include: { orderItems: true },
     });
 
-    // 3️⃣ Clear cart
+    // 3️⃣ Clear user's cart
     await db.cartItem.deleteMany({
-      where: { user: { email: session.user.email } },
+      where: { userId: session.user.id },
     });
 
-    // 4️⃣ Create Stripe PaymentIntent
+    // 4️⃣ Create Stripe PaymentIntent with metadata
     const paymentIntent = await stripe.paymentIntents.create({
       amount: total * 100, // cents
       currency: "usd",
@@ -86,7 +88,7 @@ export async function POST(req: NextRequest) {
       clientSecret: paymentIntent.client_secret,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Error creating order:", err);
     return NextResponse.json(
       { error: "Failed to create order" },
       { status: 500 }

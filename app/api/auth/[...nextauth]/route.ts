@@ -1,9 +1,30 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions, Session } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { db } from "@/app/lib/db";
 import bcrypt from "bcrypt";
+import type { JWT } from "next-auth/jwt";
 
-const handler = NextAuth({
+// Extend the default Session and JWT types
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: "USER" | "ADMIN";
+      email?: string | null;
+      name?: string | null;
+    };
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role: "USER" | "ADMIN";
+  }
+}
+
+// NextAuth configuration
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -17,14 +38,12 @@ const handler = NextAuth({
         const user = await db.user.findUnique({
           where: { email: credentials.email.toLowerCase() },
         });
-        console.log("User authorize result:", user);
 
         if (!user || !user.password) return null;
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        // Return user object for NextAuth
         return { id: user.id, email: user.email, role: user.role };
       },
     }),
@@ -33,30 +52,30 @@ const handler = NextAuth({
   session: { strategy: "jwt" },
 
   callbacks: {
-    async jwt({ token, user }) {
-      if (user){
-         token.id = user.id;
-         token.role = user.role;
-        } // attach user.id to the JWT token
+    async jwt({ token, user }: { token: JWT; user?: { id: string; role: "USER" | "ADMIN" } }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+      }
       return token;
-      
     },
 
-    async session({ session, token }) {
+    async session({
+      session,
+      token,
+    }: {
+      session: Session;
+      token: JWT;
+    }) {
       if (session.user && token.id && token.role) {
-        // Extend session with user ID
-      session.user.id = token.id as string;
-
-      if (token.role === "USER" || token.role === "ADMIN") {
-      session.user.role = token.role;
-    } else {
-      session.user.role = "USER"; // default fallback
-    }
-  
+        session.user.id = token.id;
+        session.user.role = token.role;
       }
       return session;
     },
   },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
