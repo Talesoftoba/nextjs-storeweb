@@ -1,20 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/app/lib/db";
 import crypto from "crypto";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-export async function POST(req: Request) {
-  
+export async function POST(req: NextRequest) {
   try {
     const { email } = await req.json();
 
-    const user = await db.user.findUnique({
-      where: { email },
-    });
+    const user = await db.user.findUnique({ where: { email } });
 
-    // Always return success (prevent email enumeration)
+    // Always return success to prevent email enumeration
     if (!user) {
       return NextResponse.json({
         message: "If the email exists, a reset link has been sent.",
@@ -25,10 +22,7 @@ export async function POST(req: Request) {
     const rawToken = crypto.randomBytes(32).toString("hex");
 
     // Hash token before saving
-    const tokenHash = crypto
-      .createHash("sha256")
-      .update(rawToken)
-      .digest("hex");
+    const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
 
     const expiry = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
 
@@ -41,7 +35,6 @@ export async function POST(req: Request) {
     });
 
     const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${rawToken}`;
-
     console.log("Reset link:", resetLink);
 
     await resend.emails.send({
@@ -61,9 +54,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }
