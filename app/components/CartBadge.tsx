@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FiShoppingCart } from "react-icons/fi";
+
 import { Toaster } from "react-hot-toast";
 import { useSession } from "next-auth/react";
+import { ShoppingCart } from "lucide-react";
+
 
 type CartItem = { quantity: number };
 
@@ -62,7 +64,10 @@ export default function CartBadge() {
     <div className="relative">
       <Toaster position="top-right" />
       <Link href="/cart" className="relative flex items-center">
-        <FiShoppingCart className="w-7 h-7 text-gray-800 hover:text-gray-600 transition-colors" />
+        <ShoppingCart
+      size={20} // smaller size (default is 24)
+      className="text-purple-400 hover:text-green-500 transition-colors duration-300"
+    />
         {count > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
             {count}
