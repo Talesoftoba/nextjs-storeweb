@@ -1,37 +1,36 @@
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { db } from "@/app/lib/db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession();
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!process.env.STRIPE_SECRET_KEY) {
+      return NextResponse.json(
+        { error: "Stripe secret key not configured" },
+        { status: 500 }
+      );
     }
 
-    const { orderId } = await req.json();
-
-    const order = await db.order.findUnique({
-      where: { id: orderId },
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+     apiVersion: "2026-01-28.clover",
     });
 
-    if (!order) {
-      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    const { amount } = await req.json();
+
+    if (!amount || typeof amount !== "number" || amount <= 0) {
+      return NextResponse.json(
+        { error: "Amount must be a positive number (in cents)" },
+        { status: 400 }
+      );
     }
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: order.total,
+      amount,
       currency: "usd",
-      metadata: { orderId: order.id },
     });
 
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
   } catch (err) {
-    console.error(err);
+    console.error("Stripe error:", err);
     return NextResponse.json(
       { error: "Failed to create payment intent" },
       { status: 500 }

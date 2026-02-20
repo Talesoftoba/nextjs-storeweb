@@ -1,12 +1,12 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import toast, { Toaster } from "react-hot-toast";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-// ✅ Initialize once at module level
+// ✅ Initialize Stripe publishable key
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
@@ -14,13 +14,13 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 // ✅ Prevent prerendering
 export const dynamic = "force-dynamic";
 
-function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId: string }) {
+function CheckoutForm({ clientSecret }: { clientSecret: string }) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handlePayment = async (e: React.SubmitEvent,) => {
+  const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
@@ -37,7 +37,7 @@ function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId
       toast.error(result.error.message || "Payment failed");
     } else if (result.paymentIntent?.status === "succeeded") {
       toast.success("Payment successful!");
-      router.push(`/order-success/${orderId}`);
+      router.push(`/order-success`);
     }
 
     setLoading(false);
@@ -58,16 +58,25 @@ function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId
 }
 
 export default function PaymentPage() {
-  const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId");
-  const clientSecret = searchParams.get("clientSecret");
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  if (!orderId || !clientSecret) {
-    return <p className="p-6 text-center">Missing order or payment info.</p>;
-  }
+  useEffect(() => {
+    // Call your API route to create a PaymentIntent
+    fetch("/api/stripe/payment_intents", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount: 5000 }), // $50.00 test amount
+    })
+      .then(res => res.json())
+      .then(data => setClientSecret(data.clientSecret));
+  }, []);
 
   if (!stripePromise) {
     return <p className="p-6 text-center">Stripe key not configured.</p>;
+  }
+
+  if (!clientSecret) {
+    return <p className="p-6 text-center">Loading payment intent...</p>;
   }
 
   return (
@@ -75,7 +84,7 @@ export default function PaymentPage() {
       <Toaster position="top-right" />
       <h1 className="text-3xl font-bold text-center">Payment</h1>
       <Elements stripe={stripePromise} options={{ clientSecret }}>
-        <CheckoutForm clientSecret={clientSecret} orderId={orderId} />
+        <CheckoutForm clientSecret={clientSecret} />
       </Elements>
     </div>
   );
