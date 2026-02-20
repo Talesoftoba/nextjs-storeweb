@@ -15,7 +15,14 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-function CheckoutForm({ clientSecret }: { clientSecret: string }) {
+// ✅ CheckoutForm now accepts orderId as a prop
+function CheckoutForm({
+  clientSecret,
+  orderId,
+}: {
+  clientSecret: string;
+  orderId: string;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const router = useRouter();
@@ -38,7 +45,8 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
       toast.error(result.error.message || "Payment failed");
     } else if (result.paymentIntent?.status === "succeeded") {
       toast.success("Payment successful!");
-      router.push(`/order-success`);
+      // ✅ Redirect with orderId
+     router.push(`/order-success/${orderId}`);
     }
 
     setLoading(false);
@@ -53,7 +61,6 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
         <label className="block text-sm font-semibold mb-2 text-gray-700">
           Card Details
         </label>
-
         <div className="p-4 border rounded-xl focus-within:ring-2 focus-within:ring-black transition">
           <CardElement
             options={{
@@ -62,13 +69,9 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
                   fontSize: "16px",
                   fontFamily: "Inter, sans-serif",
                   color: "#111827",
-                  "::placeholder": {
-                    color: "#9CA3AF",
-                  },
+                  "::placeholder": { color: "#9CA3AF" },
                 },
-                invalid: {
-                  color: "#EF4444",
-                },
+                invalid: { color: "#EF4444" },
               },
             }}
           />
@@ -127,14 +130,13 @@ export default function PaymentClient() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
       <Toaster position="top-right" />
-
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-8 tracking-tight">
           Complete Your Payment
         </h1>
-
+        {/* ✅ Pass orderId into CheckoutForm */}
         <Elements stripe={stripePromise} options={{ clientSecret }}>
-          <CheckoutForm clientSecret={clientSecret} />
+          <CheckoutForm clientSecret={clientSecret} orderId={orderId!} />
         </Elements>
       </div>
     </div>
