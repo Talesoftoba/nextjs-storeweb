@@ -4,14 +4,12 @@ import { useEffect, useState } from "react";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import toast, { Toaster } from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-// ✅ Initialize Stripe publishable key
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-// ✅ Prevent prerendering
 export const dynamic = "force-dynamic";
 
 function CheckoutForm({ clientSecret }: { clientSecret: string }) {
@@ -58,21 +56,28 @@ function CheckoutForm({ clientSecret }: { clientSecret: string }) {
 }
 
 export default function PaymentPage() {
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   useEffect(() => {
-    // Call your API route to create a PaymentIntent
+    if (!orderId) return;
+
     fetch("/api/stripe/payment_intents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: 5000 }), // $50.00 test amount
+      body: JSON.stringify({ orderId }),
     })
       .then(res => res.json())
       .then(data => setClientSecret(data.clientSecret));
-  }, []);
+  }, [orderId]);
 
   if (!stripePromise) {
     return <p className="p-6 text-center">Stripe key not configured.</p>;
+  }
+
+  if (!orderId) {
+    return <p className="p-6 text-center">Missing order ID.</p>;
   }
 
   if (!clientSecret) {
