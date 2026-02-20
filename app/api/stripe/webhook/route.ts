@@ -3,91 +3,67 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/app/lib/db";
 
+// Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
 });
 
-// Keep track of processed events to prevent double-processing
-const processedEvents = new Set<string>();
-
 export async function POST(req: Request) {
-  const payload = await req.text();
-  const sig = req.headers.get("stripe-signature")!;
-
-  let event: Stripe.Event;
-
-  // Verify the webhook signature
   try {
-    event = stripe.webhooks.constructEvent(
-      payload,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    );
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err);
-    return NextResponse.json({ error: "Webhook signature verification failed" }, { status: 400 });
-  }
+    // 1️⃣ Read raw body (Stripe requires raw text for signature)
+    const payload = await req.text();
+    const sig = req.headers.get("stripe-signature");
 
-  // Idempotency: prevent double-processing
-  if (processedEvents.has(event.id)) {
-    console.log(`Event ${event.id} already processed, skipping.`);
-    return NextResponse.json({ received: true });
-  }
-  processedEvents.add(event.id);
+    if (!sig) {
+      console.error("Missing Stripe signature");
+      return NextResponse.json({ error: "Missing signature" }, { status: 400 });
+    }
 
-  try {
+    // 2️⃣ Verify Stripe signature using webhook secret
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        payload,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err);
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
+    }
+
+    // 3️⃣ Handle events
     switch (event.type) {
-      case "payment_intent.succeeded": {
+      case "payment_intent.succeeded":
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        const orderId = paymentIntent.metadata?.orderId;
-
-        if (!orderId) {
-          console.warn("No orderId in paymentIntent metadata!");
-          break;
-        }
-
-        try {
+        if (paymentIntent.metadata?.orderId) {
           await db.order.update({
-            where: { id: orderId },
+            where: { id: paymentIntent.metadata.orderId },
             data: { status: "PAID" },
           });
-          console.log(`Payment succeeded for order ${orderId}`);
-        } catch (err) {
-          console.error(`Failed to update order ${orderId}:`, err);
+          console.log(`Payment succeeded for order ${paymentIntent.metadata.orderId}`);
         }
-
         break;
-      }
 
-      case "payment_intent.payment_failed": {
-        const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        const orderId = paymentIntent.metadata?.orderId;
-
-        if (!orderId) {
-          console.warn("No orderId in paymentIntent metadata!");
-          break;
-        }
-
-        try {
+      case "payment_intent.payment_failed":
+        const failedIntent = event.data.object as Stripe.PaymentIntent;
+        if (failedIntent.metadata?.orderId) {
           await db.order.update({
-            where: { id: orderId },
+            where: { id: failedIntent.metadata.orderId },
             data: { status: "CANCELLED" },
           });
-          console.log(`Payment failed for order ${orderId}`);
-        } catch (err) {
-          console.error(`Failed to cancel order ${orderId}:`, err);
+          console.log(`Payment failed for order ${failedIntent.metadata.orderId}`);
         }
-
         break;
-      }
 
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
-  } catch (err) {
-    console.error("Error handling webhook event:", err);
-    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
-  }
 
-  return NextResponse.json({ received: true });
+    // 4️⃣ Respond 200 to Stripe
+    return NextResponse.json({ received: true });
+  } catch (err) {
+    console.error("Webhook error:", err);
+    return NextResponse.json({ error: "Webhook failed" }, { status: 500 });
+  }
 }
