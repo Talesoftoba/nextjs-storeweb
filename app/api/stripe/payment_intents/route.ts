@@ -6,17 +6,14 @@ import { db } from "@/app/lib/db";
 export async function POST(req: Request) {
   try {
     if (!process.env.STRIPE_SECRET_KEY) {
-      console.error("❌ Missing STRIPE_SECRET_KEY");
       return NextResponse.json(
         { error: "Stripe secret key not configured" },
         { status: 500 }
       );
     }
 
-    // ✅ Use a valid Stripe API version
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2023-08-16" as Stripe.LatestApiVersion,
-    });
+    // ✅ No apiVersion specified — Stripe defaults to your account’s version
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
     const session = await getServerSession();
     if (!session?.user?.email) {
@@ -39,15 +36,17 @@ export async function POST(req: Request) {
       metadata: { orderId: order.id, userEmail: session.user.email },
     });
 
-    console.info(`✅ PaymentIntent created: ${paymentIntent.id} for order ${order.id}`);
+    // ✅ Log the Stripe version being used
+    console.info(
+      `PaymentIntent ${paymentIntent.id} created with Stripe version: ${paymentIntent.lastResponse.headers["stripe-version"]}`
+    );
 
     return NextResponse.json({ clientSecret: paymentIntent.client_secret });
   } catch (err) {
-    console.error("❌ Stripe error:", err);
+    console.error("Stripe error:", err);
     return NextResponse.json(
       { error: "Failed to create payment intent" },
       { status: 500 }
     );
   }
 }
-
