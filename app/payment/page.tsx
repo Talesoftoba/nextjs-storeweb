@@ -1,16 +1,54 @@
 "use client";
+export const dynamic = "force-dynamic";
 
 import { useEffect, useState } from "react";
-import { Elements } from "@stripe/react-stripe-js";
+import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
-import { Toaster } from "react-hot-toast";
-import { useSearchParams } from "next/navigation";
-
-export const dynamic = "force-dynamic";
+import toast, { Toaster } from "react-hot-toast";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
+
+function CheckoutForm({ clientSecret }: { clientSecret: string }) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  const handlePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    const card = elements.getElement(CardElement);
+    if (!card) return;
+
+    setLoading(true);
+
+    const result = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: { card },
+    });
+
+    if (result.error) {
+      toast.error(result.error.message || "Payment failed");
+    } else if (result.paymentIntent?.status === "succeeded") {
+      toast.success("Payment successful!");
+      router.push(`/order-success`);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <form onSubmit={handlePayment}>
+      <CardElement />
+      <button type="submit" disabled={loading}>
+        {loading ? "Processing..." : "Pay Now"}
+      </button>
+    </form>
+  );
+}
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -37,7 +75,7 @@ export default function PaymentPage() {
       <Toaster position="top-right" />
       <h1>Payment</h1>
       <Elements stripe={stripePromise} options={{ clientSecret }}>
-        {/* CheckoutForm here */}
+        <CheckoutForm clientSecret={clientSecret} />
       </Elements>
     </div>
   );
