@@ -6,54 +6,11 @@ import { loadStripe } from "@stripe/stripe-js";
 import toast, { Toaster } from "react-hot-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
-
-export const dynamic = "force-dynamic";
-
-function CheckoutForm({ clientSecret }: { clientSecret: string }) {
-  const stripe = useStripe();
-  const elements = useElements();
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!stripe || !elements) return;
-
-    const card = elements.getElement(CardElement);
-    if (!card) return;
-
-    setLoading(true);
-
-    const result = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: { card },
-    });
-
-    if (result.error) {
-      toast.error(result.error.message || "Payment failed");
-    } else if (result.paymentIntent?.status === "succeeded") {
-      toast.success("Payment successful!");
-      router.push(`/order-success`);
-    }
-
-    setLoading(false);
-  };
-
-  return (
-    <form onSubmit={handlePayment} className="space-y-4 max-w-md mx-auto">
-      <CardElement className="p-2 border rounded" />
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
-      >
-        {loading ? "Processing..." : "Pay Now"}
-      </button>
-    </form>
-  );
-}
 
 export default function PaymentPage() {
   const searchParams = useSearchParams();
@@ -62,7 +19,6 @@ export default function PaymentPage() {
 
   useEffect(() => {
     if (!orderId) return;
-
     fetch("/api/stripe/payment_intents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -72,24 +28,16 @@ export default function PaymentPage() {
       .then(data => setClientSecret(data.clientSecret));
   }, [orderId]);
 
-  if (!stripePromise) {
-    return <p className="p-6 text-center">Stripe key not configured.</p>;
-  }
-
-  if (!orderId) {
-    return <p className="p-6 text-center">Missing order ID.</p>;
-  }
-
-  if (!clientSecret) {
-    return <p className="p-6 text-center">Loading payment intent...</p>;
-  }
+  if (!stripePromise) return <p>Stripe key not configured.</p>;
+  if (!orderId) return <p>Missing order ID.</p>;
+  if (!clientSecret) return <p>Loading payment intent...</p>;
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div>
       <Toaster position="top-right" />
-      <h1 className="text-3xl font-bold text-center">Payment</h1>
+      <h1>Payment</h1>
       <Elements stripe={stripePromise} options={{ clientSecret }}>
-        <CheckoutForm clientSecret={clientSecret} />
+        {/* CheckoutForm here */}
       </Elements>
     </div>
   );
