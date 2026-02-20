@@ -6,12 +6,12 @@ import { loadStripe } from "@stripe/stripe-js";
 import toast, { Toaster } from "react-hot-toast";
 import { useState } from "react";
 
-// ✅ Guard against missing env variable
+// ✅ Initialize once at module level
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-// ✅ Force runtime rendering (App Router)
+// ✅ Prevent prerendering
 export const dynamic = "force-dynamic";
 
 function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId: string }) {
@@ -20,7 +20,7 @@ function CheckoutForm({ clientSecret, orderId }: { clientSecret: string; orderId
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  const handlePayment = async (e: React.FormEvent) => {
+  const handlePayment = async (e: React.SubmitEvent,) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
@@ -62,8 +62,12 @@ export default function PaymentPage() {
   const orderId = searchParams.get("orderId");
   const clientSecret = searchParams.get("clientSecret");
 
-  if (!orderId || !clientSecret || !stripePromise) {
-    return <p className="p-6 text-center">Missing order, payment info, or Stripe key.</p>;
+  if (!orderId || !clientSecret) {
+    return <p className="p-6 text-center">Missing order or payment info.</p>;
+  }
+
+  if (!stripePromise) {
+    return <p className="p-6 text-center">Stripe key not configured.</p>;
   }
 
   return (
