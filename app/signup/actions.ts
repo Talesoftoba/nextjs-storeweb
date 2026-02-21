@@ -12,7 +12,7 @@ export async function signupAction(
    prevState:SignupState,
    formData:FormData
     ):Promise<SignupState>{
-     const email = formData.get("email")?.toString();
+     const email = formData.get("email")?.toString().toLowerCase();
      const password = formData.get("password")?.toString();
 
      if (!email || !password){
