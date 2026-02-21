@@ -28,7 +28,7 @@ export default function HomePage() {
           style, comfort, and value to your everyday life. Whether you’re shopping
           for essentials or something special, our commitment is to provide you
           with a seamless experience, friendly service, and items you’ll truly
-          love. Step inside and discover a store built around you.
+          love. Step inside and discover a store built around you..
         </p>
       </div>
     </div>
