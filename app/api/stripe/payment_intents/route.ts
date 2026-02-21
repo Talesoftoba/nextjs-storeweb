@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Stripe secret key not configured" }, { status: 500 });
     }
 
-    // ✅ Use default API version (recommended) or pin to a stable one like "2023-10-16"
+    //  Use default API version (recommended) or pin to a stable one like "2023-10-16"
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
     const session = await getServerSession();
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // ⚡ Create idempotency key to prevent duplicate payment intents
+    //  Create idempotency key to prevent duplicate payment intents
     const idempotencyKey = `order-${order.id}`;
 
     const paymentIntent = await stripe.paymentIntents.create(

@@ -15,7 +15,6 @@ const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-// ✅ CheckoutForm now accepts orderId as a prop
 function CheckoutForm({
   clientSecret,
   orderId,
@@ -45,8 +44,8 @@ function CheckoutForm({
       toast.error(result.error.message || "Payment failed");
     } else if (result.paymentIntent?.status === "succeeded") {
       toast.success("Payment successful!");
-      // ✅ Redirect with orderId
-     router.push(`/order-success/${orderId}`);
+      // ✅ Redirect to success page with orderId
+      router.push(`/order-success/${orderId}`);
     }
 
     setLoading(false);
@@ -103,7 +102,8 @@ export default function PaymentClient() {
       body: JSON.stringify({ orderId }),
     })
       .then((res) => res.json())
-      .then((data) => setClientSecret(data.clientSecret));
+      .then((data) => setClientSecret(data.clientSecret))
+      .catch(() => toast.error("Failed to load payment intent"));
   }, [orderId]);
 
   if (!stripePromise)
@@ -134,7 +134,6 @@ export default function PaymentClient() {
         <h1 className="text-3xl font-bold text-center mb-8 tracking-tight">
           Complete Your Payment
         </h1>
-        {/* ✅ Pass orderId into CheckoutForm */}
         <Elements stripe={stripePromise} options={{ clientSecret }}>
           <CheckoutForm clientSecret={clientSecret} orderId={orderId!} />
         </Elements>

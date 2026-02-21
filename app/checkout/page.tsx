@@ -60,35 +60,35 @@ export default function CheckoutPage() {
   };
 
   // ✅ Create order and redirect to payment page
-  const handleProceedToPayment = async () => {
-    if (items.length === 0) {
-      toast.error("Your cart is empty!");
-      return;
-    }
+ const handleProceedToPayment = async () => {
+  if (items.length === 0) {
+    toast.error("Your cart is empty!");
+    return;
+  }
 
-    if (!shipping.fullName || !shipping.email || !shipping.address || !shipping.city || !shipping.zip || !shipping.country) {
-      toast.error("Please fill in all shipping fields");
-      return;
-    }
+  if (!shipping.fullName || !shipping.email || !shipping.address || !shipping.city || !shipping.zip || !shipping.country) {
+    toast.error("Please fill in all shipping fields");
+    return;
+  }
 
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cart: items, shipping }),
-      });
+  try {
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cart: items, shipping }),
+    });
 
-      if (!res.ok) throw new Error("Failed to create order");
+    if (!res.ok) throw new Error("Failed to create order");
 
-      const data = await res.json();
-      toast.success("Order created! Redirecting to payment...");
-      // Redirect to payment page with orderId and clientSecret in query
-      router.push(`/payment?orderId=${data.orderId}&clientSecret=${data.clientSecret}`);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to create order");
-    }
-  };
+    const data = await res.json();
+    toast.success("Order created! Redirecting to payment...");
+    // ✅ Redirect only with orderId
+    router.push(`/payment?orderId=${data.orderId}`);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to create order");
+  }
+};
 
   if (loading) return <p className="p-6">Loading checkout...</p>;
   if (items.length === 0) return <p className="p-6 text-center">Your cart is empty.</p>;

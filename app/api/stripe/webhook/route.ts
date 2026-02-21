@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { db } from "@/app/lib/db";
-import { OrderStatus } from "@prisma/client"; // ✅ import enum
+import { OrderStatus, PaymentStatus } from "@prisma/client";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -21,21 +21,44 @@ export async function POST(req: Request) {
       const orderId = paymentIntent.metadata.orderId;
 
       if (orderId) {
+        // Update order
         await db.order.update({
           where: { id: orderId },
-          data: { status: OrderStatus.PAID }, // ✅ use enum
+          data: { status: OrderStatus.PAID },
         });
-        console.log(`✅ Order ${orderId} marked as PAID`);
+
+        // Update payment
+        await db.payment.update({
+          where: { orderId },
+          data: {
+            status: PaymentStatus.SUCCESS,
+            stripePaymentId: paymentIntent.id,
+            paymentIntent: paymentIntent.id,
+            amount: paymentIntent.amount / 100, // convert cents to dollars
+          },
+        });
+
+        console.log(`✅ Order ${orderId} marked as PAID, Payment SUCCESS`);
+      }
+    }
+
+    if (event.type === "payment_intent.payment_failed") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      const orderId = paymentIntent.metadata.orderId;
+
+      if (orderId) {
+        await db.payment.update({
+          where: { orderId },
+          data: { status: PaymentStatus.FAILED },
+        });
+
+        console.log(`❌ Payment for Order ${orderId} FAILED`);
       }
     }
 
     return NextResponse.json({ received: true });
   } catch (err) {
-    if (err instanceof Error) {
-      console.error("Webhook error:", err.message);
-    } else {
-      console.error("Webhook error:", err);
-    }
+    console.error("Webhook error:", err);
     return NextResponse.json({ error: "Webhook failed" }, { status: 400 });
   }
 }
