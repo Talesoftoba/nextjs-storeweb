@@ -1,39 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 
-type Product = {
-  id: string;
-  name: string;
-  price: number;
-};
-
-type OrderItem = {
-  id: string;
-  quantity: number;
-  price: number;
-  product: Product;
-};
-
-type Payment = {
-  id: string;
-  status: string;
-  stripePaymentId?: string;
-};
+type PaymentStatusType = "PENDING" | "SUCCESS" | "FAILED";
 
 type Order = {
   id: string;
   total: number;
-  status: string;
-  orderItems: OrderItem[];
-  payment?: Payment;
+  status: "PENDING" | "PAID" | "FAILED";
+  payment?: {
+    status: PaymentStatusType;
+  };
 };
 
 export default function OrderSuccessPage() {
   const params = useParams();
-  const router = useRouter();
   const orderId = params.orderId;
 
   const [order, setOrder] = useState<Order | null>(null);
@@ -42,63 +25,113 @@ export default function OrderSuccessPage() {
   useEffect(() => {
     if (!orderId) return;
 
-    fetch(`/api/orders/${orderId}`)
-      .then((res) => res.json())
-      .then((data) => setOrder(data))
-      .catch((err) => {
+    // 1️⃣ Fetch initial order
+    const fetchOrder = async () => {
+      try {
+        const res = await fetch(`/api/orders/${orderId}`);
+        if (!res.ok) throw new Error("Failed to fetch order");
+        const data: Order = await res.json();
+        setOrder(data);
+        setLoading(false);
+      } catch (err) {
         console.error(err);
-        toast.error("Failed to load order details");
-      })
-      .finally(() => setLoading(false));
+        toast.error("Failed to fetch order");
+      }
+    };
+
+    fetchOrder();
+
+    // 2️⃣ SSE for live payment updates
+    const sse = new EventSource(`/api/orders/${orderId}/status`);
+
+    sse.onmessage = (event) => {
+
+      // 🔹 Debug log on client
+  console.log("SSE message:", event.data);
+
+      try {
+        const parsed = JSON.parse(event.data) as { status: PaymentStatusType };
+        if (!parsed.status) return;
+
+        setOrder((prev) => {
+          if (!prev) return prev;
+          const status: PaymentStatusType = parsed.status;
+
+          return {
+            ...prev,
+            payment: { status }, // always defined
+            status: status === "SUCCESS" ? "PAID" : status === "FAILED" ? "FAILED" : prev.status,
+          };
+        });
+
+        // Auto-close SSE when finished
+        if (parsed.status === "SUCCESS" || parsed.status === "FAILED") {
+          sse.close();
+        }
+      } catch (err) {
+        console.error("SSE parse error:", err);
+      }
+    };
+
+    sse.onerror = (err) => {
+      console.error("SSE error:", err);
+      sse.close();
+    };
+
+    return () => sse.close();
   }, [orderId]);
 
-  if (loading) return <p className="p-6 text-center">Loading order...</p>;
-  if (!order) return <p className="p-6 text-center">Order not found.</p>;
+  if (!orderId) return <p className="p-6 text-center">Missing order ID.</p>;
+  if (loading || !order) return <p className="p-6 text-center">Loading order...</p>;
+
+  const paymentStatus = order.payment?.status ?? "PENDING";
 
   return (
-    <div className="max-w-2xl mx-auto my-20 p-6 border rounded shadow space-y-6">
+    <div className="max-w-3xl mx-auto p-6 space-y-4">
       <Toaster position="top-right" />
-      <h1 className="text-2xl font-bold text-center">Thank you for your purchase 🎉</h1>
 
-      {/* Order Summary */}
-      <div className="space-y-2 text-center">
-        <p>
-          Your order <span className="font-semibold">{order.id}</span> has been successfully placed.
-        </p>
-        <p className="text-lg font-bold">
-          Total Paid: ${order.total ? order.total.toFixed(2) : "0.00"}
-        </p>
-        <p>Order Status: <span className="capitalize">{order.status}</span></p>
-        <p>Payment Status: <span className="capitalize">{order.payment?.status ?? "Unknown"}</span></p>
-        {order.payment?.stripePaymentId && (
-          <p className="text-sm text-gray-500">
-            Stripe Payment ID: {order.payment.stripePaymentId}
-          </p>
-        )}
-      </div>
+      <h1 className="text-3xl font-bold text-center">Order Details</h1>
 
-      {/* Items */}
-      <div className="border rounded p-4 space-y-2">
-        <h2 className="font-bold text-xl">Items</h2>
-        {order.orderItems.map((item) => (
-          <div key={item.id} className="flex justify-between">
-            <span>
-              {item.product?.name ?? "Product"} × {item.quantity}
-            </span>
-            <span>${(item.price * item.quantity).toFixed(2)}</span>
-          </div>
-        ))}
-      </div>
+      <p className="text-center">
+        Order ID: <strong>{order.id}</strong>
+      </p>
 
-      {/* Back to Home */}
-      <div className="text-center">
-        <button
-          onClick={() => router.push("/")}
-          className="mt-4 px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+      <p className="text-center">
+        Total: <strong>${(order.total / 100).toFixed(2)}</strong>
+      </p>
+
+      <p className="text-center">
+        Status:{" "}
+        <span
+          className={`font-bold ${
+            paymentStatus === "SUCCESS"
+              ? "text-green-600"
+              : paymentStatus === "PENDING"
+              ? "text-yellow-600"
+              : "text-red-600"
+          }`}
         >
-          Back to Home
-        </button>
-      </div>
+          {paymentStatus === "SUCCESS" ? "PAID" : paymentStatus}
+        </span>
+      </p>
+
+      {paymentStatus === "PENDING" && (
+        <p className="text-center text-sm text-gray-500">
+          Payment is processing. This page will update automatically.
+        </p>
+      )}
+
+      {paymentStatus === "SUCCESS" && (
+        <p className="text-center text-green-600 font-semibold">
+          ✅ Payment completed successfully!
+        </p>
+      )}
+
+      {paymentStatus === "FAILED" && (
+        <p className="text-center text-red-600 font-semibold">
+          ❌ Payment failed. Please try again.
+        </p>
+      )}
     </div>
   );
 }

@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+// app/api/orders/[orderId]/route.ts
+
+import { NextResponse } from "next/server";
 import { db } from "@/app/lib/db";
 
 export async function GET(
-  req: NextRequest,
+  req: Request,
   context: { params: Promise<{ orderId: string }> }
 ) {
   try {
-    const { orderId } = await context.params; // ✅ MUST await
+    const { orderId } = await context.params;
 
     if (!orderId) {
       return NextResponse.json(
@@ -17,11 +19,7 @@ export async function GET(
 
     const order = await db.order.findUnique({
       where: { id: orderId },
-      include: {
-        orderItems: { include: { product: true } },
-        user: true,
-        payment: true,
-      },
+      include: { payment: true },
     });
 
     if (!order) {
@@ -31,15 +29,11 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({
-      ...order,
-      total: order.total ? Number(order.total) : 0,
-    });
-
-  } catch (err) {
-    console.error(err);
+    return NextResponse.json(order);
+  } catch (error) {
+    console.error("Order GET error:", error);
     return NextResponse.json(
-      { error: "Failed to fetch order" },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

@@ -21,21 +21,21 @@ export async function POST(req: Request) {
       const orderId = paymentIntent.metadata.orderId;
 
       if (orderId) {
-        // Update order
-        await db.order.update({
-          where: { id: orderId },
-          data: { status: OrderStatus.PAID },
-        });
-
-        // Update payment
+        // 1️⃣ Update Payment row
         await db.payment.update({
           where: { orderId },
           data: {
             status: PaymentStatus.SUCCESS,
             stripePaymentId: paymentIntent.id,
             paymentIntent: paymentIntent.id,
-            amount: paymentIntent.amount / 100, // convert cents to dollars
+            amount: paymentIntent.amount, // store in cents
           },
+        });
+
+        // 2️⃣ Update Order status
+        await db.order.update({
+          where: { id: orderId },
+          data: { status: OrderStatus.PAID },
         });
 
         console.log(`✅ Order ${orderId} marked as PAID, Payment SUCCESS`);
@@ -51,7 +51,6 @@ export async function POST(req: Request) {
           where: { orderId },
           data: { status: PaymentStatus.FAILED },
         });
-
         console.log(`❌ Payment for Order ${orderId} FAILED`);
       }
     }
@@ -62,4 +61,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Webhook failed" }, { status: 400 });
   }
 }
-

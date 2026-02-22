@@ -59,39 +59,39 @@ export default function CheckoutPage() {
     setShipping({ ...shipping, [e.target.name]: e.target.value });
   };
 
-  // ✅ Create order and redirect to payment page
- const handleProceedToPayment = async () => {
-  if (items.length === 0) {
-    toast.error("Your cart is empty!");
-    return;
-  }
+  const handleProceedToPayment = async () => {
+    if (items.length === 0) {
+      toast.error("Your cart is empty!");
+      return;
+    }
 
-  if (!shipping.fullName || !shipping.email || !shipping.address || !shipping.city || !shipping.zip || !shipping.country) {
-    toast.error("Please fill in all shipping fields");
-    return;
-  }
+    if (Object.values(shipping).some((v) => !v)) {
+      toast.error("Please fill in all shipping fields");
+      return;
+    }
 
-  try {
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cart: items, shipping }),
-    });
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cart: items, shipping }),
+      });
 
-    if (!res.ok) throw new Error("Failed to create order");
+      if (!res.ok) throw new Error("Failed to create order");
 
-    const data = await res.json();
-    toast.success("Order created! Redirecting to payment...");
-    // ✅ Redirect only with orderId
-    router.push(`/payment?orderId=${data.orderId}`);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to create order");
-  }
-};
+      const data = await res.json();
+      toast.success("Order created! Redirecting to payment...");
+      router.push(`/payment?orderId=${data.orderId}`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to create order");
+    }
+  };
 
-  if (loading) return <p className="p-6">Loading checkout...</p>;
-  if (items.length === 0) return <p className="p-6 text-center">Your cart is empty.</p>;
+  if (loading)
+    return <p className="p-6 text-center">Loading checkout...</p>;
+  if (items.length === 0)
+    return <p className="p-6 text-center">Your cart is empty.</p>;
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
@@ -101,13 +101,17 @@ export default function CheckoutPage() {
       {/* Cart Summary */}
       <div className="space-y-4">
         {items.map((item) => (
-          <div key={item.id} className="flex items-center gap-4 border rounded p-4">
+          <div
+            key={item.id}
+            className="flex items-center gap-4 border rounded p-4"
+          >
             <Image
               src={item.product.image || "/placeholder.png"}
               alt={item.product.name}
               width={80}
               height={80}
               className="object-cover rounded"
+              priority={true} // for faster LCP on small images
             />
             <div className="flex-1">
               <h2 className="font-semibold">{item.product.name}</h2>
@@ -123,18 +127,20 @@ export default function CheckoutPage() {
       {/* Shipping Form */}
       <div className="border rounded p-4 space-y-3">
         <h2 className="font-bold text-xl">Shipping Details</h2>
-        {["fullName","email","address","city","zip","country"].map((field) => (
-          <input
-            key={field}
-            type={field === "email" ? "email" : "text"}
-            name={field}
-            placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
-            value={shipping[field as keyof typeof shipping]}
-            onChange={handleChange}
-            className="w-full border rounded px-3 py-2"
-            required
-          />
-        ))}
+        {["fullName", "email", "address", "city", "zip", "country"].map(
+          (field) => (
+            <input
+              key={field}
+              type={field === "email" ? "email" : "text"}
+              name={field}
+              placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
+              value={shipping[field as keyof typeof shipping]}
+              onChange={handleChange}
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+          )
+        )}
       </div>
 
       {/* Total & Proceed Button */}

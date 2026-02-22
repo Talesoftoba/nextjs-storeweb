@@ -60,7 +60,6 @@ model CartItem {
 
   @@unique([userId, productId])
 }
-
 model Order {
   id              String      @id @default(cuid())
   userId          String
@@ -77,11 +76,15 @@ model Order {
   shippingCountry  String?
   shippingPhone    String?
 
-  orderItems OrderItem[]
-  payment    Payment?
-  user       User        @relation(fields: [userId], references: [id])
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  orderItems       OrderItem[]
+  payment          Payment?
+  user             User        @relation(fields: [userId], references: [id])
+
+  // ✅ Stripe paymentIntentId for webhook & sync
+  paymentIntentId  String?     @unique
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 }
 
 // Order items

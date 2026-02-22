@@ -1,13 +1,8 @@
 // app/api/orders/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import Stripe from "stripe";
 import { db } from "@/app/lib/db";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // import your authOptions
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-01-28.clover",
-});
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
 type Shipping = {
   fullName: string;
@@ -25,7 +20,6 @@ type CartItem = {
 
 export async function POST(req: NextRequest) {
   try {
-    // ✅ Get session using authOptions for proper typing
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {
@@ -39,13 +33,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
     }
 
-    // 1️⃣ Calculate total
+    // Calculate total
     const total = cart.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
       0
     );
 
-    // 2️⃣ Create order in DB linked by userId
+    // Create order
     const order = await db.order.create({
       data: {
         userId: session.user.id,
@@ -65,27 +59,11 @@ export async function POST(req: NextRequest) {
           })),
         },
       },
-      include: { orderItems: true },
     });
 
-    // 3️⃣ Clear user's cart
-    await db.cartItem.deleteMany({
-      where: { userId: session.user.id },
-    });
-
-    // 4️⃣ Create Stripe PaymentIntent with metadata
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: total * 100, // cents
-      currency: "usd",
-      metadata: { orderId: order.id },
-      receipt_email: shipping.email,
-    });
-
-    // 5️⃣ Return order info + client secret
     return NextResponse.json({
       orderId: order.id,
       total,
-      clientSecret: paymentIntent.client_secret,
     });
   } catch (err) {
     console.error("Error creating order:", err);
