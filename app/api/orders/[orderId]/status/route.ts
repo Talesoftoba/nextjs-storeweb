@@ -51,6 +51,7 @@ export async function GET(
             controller.close();
           }
         }, 3000); // poll every 3s
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: "SSE failed" })}\n\n`));
         controller.close();

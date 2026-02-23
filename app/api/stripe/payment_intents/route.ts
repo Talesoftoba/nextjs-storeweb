@@ -1,4 +1,3 @@
-// app/api/stripe/payment_intents/route.ts
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerSession } from "next-auth/next";
@@ -9,6 +8,8 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-01-28.clover",
 });
 
+export const dynamic = "force-dynamic";
+
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +18,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { orderId } = await req.json();
+    const body = await req.text();
+
+    if (!body) {
+      return NextResponse.json({ error: "No body provided" }, { status: 400 });
+    }
+
+    const { orderId } = JSON.parse(body);
 
     if (!orderId) {
       return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
@@ -38,7 +45,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Prevent duplicate PaymentIntents
     const idempotencyKey = `order-${order.id}`;
 
     const paymentIntent = await stripe.paymentIntents.create(
@@ -53,7 +59,9 @@ export async function POST(req: Request) {
       { idempotencyKey }
     );
 
-    // Save PaymentIntent ID to order
+    console.log("✅ PaymentIntent created:", paymentIntent.id);
+    console.log("✅ Order ID in metadata:", order.id);
+
     await db.order.update({
       where: { id: order.id },
       data: {
@@ -64,8 +72,9 @@ export async function POST(req: Request) {
     return NextResponse.json({
       clientSecret: paymentIntent.client_secret,
     });
+
   } catch (err) {
-    console.error("Stripe error:", err);
+    console.error("❌ Stripe error:", err);
     return NextResponse.json(
       { error: "Failed to create payment intent" },
       { status: 500 }
