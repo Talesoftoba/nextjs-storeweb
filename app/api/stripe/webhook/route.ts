@@ -54,9 +54,16 @@ export async function POST(req: Request) {
           break;
         }
 
-        await db.payment.update({
+        await db.payment.upsert({
           where: { orderId },
-          data: {
+          create: {
+            orderId,
+            status: PaymentStatus.SUCCESS,
+            stripePaymentId: paymentIntent.id,
+            paymentIntent: paymentIntent.id,
+            amount: paymentIntent.amount,
+          },
+          update: {
             status: PaymentStatus.SUCCESS,
             stripePaymentId: paymentIntent.id,
             paymentIntent: paymentIntent.id,
@@ -85,9 +92,18 @@ export async function POST(req: Request) {
           break;
         }
 
-        await db.payment.update({
+        await db.payment.upsert({
           where: { orderId },
-          data: { status: PaymentStatus.FAILED },
+          create: {
+            orderId,
+            status: PaymentStatus.FAILED,
+            stripePaymentId: paymentIntent.id,
+            paymentIntent: paymentIntent.id,
+            amount: paymentIntent.amount,
+          },
+          update: {
+            status: PaymentStatus.FAILED,
+          },
         });
 
         await db.order.update({
