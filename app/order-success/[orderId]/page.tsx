@@ -25,7 +25,7 @@ export default function OrderSuccessPage() {
   useEffect(() => {
     if (!orderId) return;
 
-    // 1️⃣ Fetch initial order
+    // 1 Fetch initial order
     const fetchOrder = async () => {
       try {
         const res = await fetch(`/api/orders/${orderId}`);
@@ -41,12 +41,12 @@ export default function OrderSuccessPage() {
 
     fetchOrder();
 
-    // 2️⃣ SSE for live payment updates
+    // 2 SSE for live payment updates
     const sse = new EventSource(`/api/orders/${orderId}/status`);
 
     sse.onmessage = (event) => {
 
-      // 🔹 Debug log on client
+      //  Debug log on client
   console.log("SSE message:", event.data);
 
       try {
@@ -97,7 +97,7 @@ export default function OrderSuccessPage() {
       </p>
 
       <p className="text-center">
-        Total: <strong>${(order.total / 100).toFixed(2)}</strong>
+       Total: <strong>${order.total.toFixed(2)}</strong>
       </p>
 
       <p className="text-center">
@@ -123,13 +123,13 @@ export default function OrderSuccessPage() {
 
       {paymentStatus === "SUCCESS" && (
         <p className="text-center text-green-600 font-semibold">
-          ✅ Payment completed successfully!
+          Payment completed successfully!
         </p>
       )}
 
       {paymentStatus === "FAILED" && (
         <p className="text-center text-red-600 font-semibold">
-          ❌ Payment failed. Please try again.
+           Payment failed. Please try again.
         </p>
       )}
     </div>

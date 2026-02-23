@@ -59,8 +59,8 @@ export async function POST(req: Request) {
       { idempotencyKey }
     );
 
-    console.log("✅ PaymentIntent created:", paymentIntent.id);
-    console.log("✅ Order ID in metadata:", order.id);
+    console.log("PaymentIntent created:", paymentIntent.id);
+    console.log("Order ID in metadata:", order.id);
 
     await db.order.update({
       where: { id: order.id },
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     });
 
   } catch (err) {
-    console.error("❌ Stripe error:", err);
+    console.error("Stripe error:", err);
     return NextResponse.json(
       { error: "Failed to create payment intent" },
       { status: 500 }

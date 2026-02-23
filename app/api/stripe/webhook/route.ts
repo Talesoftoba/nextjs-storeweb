@@ -34,7 +34,7 @@ export async function POST(req: Request) {
         process.env.STRIPE_WEBHOOK_SECRET!
       );
     } catch (err) {
-      console.error("❌ Signature verification failed:", err);
+      console.error("Signature verification failed:", err);
       return NextResponse.json(
         { error: "Webhook signature failed" },
         { status: 400 }
@@ -46,11 +46,11 @@ export async function POST(req: Request) {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         const orderId = paymentIntent.metadata?.orderId;
 
-        console.log("✅ payment_intent.succeeded fired");
+        console.log("payment_intent.succeeded fired");
         console.log("Order ID from metadata:", orderId);
 
         if (!orderId) {
-          console.error("❌ No orderId found in paymentIntent metadata");
+          console.error("No orderId found in paymentIntent metadata");
           break;
         }
 
@@ -61,13 +61,13 @@ export async function POST(req: Request) {
             status: PaymentStatus.SUCCESS,
             stripePaymentId: paymentIntent.id,
             paymentIntent: paymentIntent.id,
-            amount: paymentIntent.amount,
+            amount: paymentIntent.amount / 100,
           },
           update: {
             status: PaymentStatus.SUCCESS,
             stripePaymentId: paymentIntent.id,
             paymentIntent: paymentIntent.id,
-            amount: paymentIntent.amount,
+            amount: paymentIntent.amount / 100,
           },
         });
 
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
           data: { status: OrderStatus.PAID },
         });
 
-        console.log(`✅ Order ${orderId} marked as PAID`);
+        console.log(`Order ${orderId} marked as PAID`);
         break;
       }
 
@@ -84,11 +84,11 @@ export async function POST(req: Request) {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         const orderId = paymentIntent.metadata?.orderId;
 
-        console.log("❌ payment_intent.payment_failed fired");
+        console.log("payment_intent.payment_failed fired");
         console.log("Order ID from metadata:", orderId);
 
         if (!orderId) {
-          console.error("❌ No orderId found in paymentIntent metadata");
+          console.error(" No orderId found in paymentIntent metadata");
           break;
         }
 
@@ -111,18 +111,18 @@ export async function POST(req: Request) {
           data: { status: OrderStatus.CANCELLED },
         });
 
-        console.log(`❌ Order ${orderId} marked as CANCELLED`);
+        console.log(`Order ${orderId} marked as CANCELLED`);
         break;
       }
 
       default:
-        console.log(`ℹ️ Unhandled event type: ${event.type}`);
+        console.log(`ℹUnhandled event type: ${event.type}`);
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
 
   } catch (err) {
-    console.error("❌ Webhook handler error:", err);
+    console.error("Webhook handler error:", err);
     return NextResponse.json(
       { error: "Webhook handler failed" },
       { status: 500 }

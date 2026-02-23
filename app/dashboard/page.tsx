@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   // Fetch all products
   const productsDb = await db.product.findMany();
 
-  // ✅ Explicitly type the map parameter
+  //  Explicitly type the map parameter
   const products = productsDb.map((p: ProductType) => ({
     id: p.id,
     name: p.name,

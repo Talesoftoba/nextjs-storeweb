@@ -5,7 +5,7 @@ import Image from "next/image";
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 
-// ✅ Define a type that matches your Prisma Product model
+// Define a type that matches your Prisma Product model
 type ProductType = {
   id: string;
   name: string;
@@ -19,14 +19,14 @@ type ProductType = {
 };
 
 export default async function ProductsPage() {
-  // ✅ Protect page: Only admins can access
+  //  Protect page: Only admins can access
   const session = await getServerSession();
   if (!session?.user?.email) redirect("/login");
 
   const user = await db.user.findUnique({ where: { email: session.user.email } });
   if (!user || user.role !== "ADMIN") redirect("/");
 
-  // ✅ Fetch products with type annotation
+  //  Fetch products with type annotation
   const products: ProductType[] = await db.product.findMany();
 
   return (
