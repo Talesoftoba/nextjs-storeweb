@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 flex items-center justify-center px-4 py-20 overflow-hidden relative">
+    <div className="bg-neutral-950 text-neutral-200 flex items-center justify-center px-4 py-20 overflow-hidden relative">
 
       {/* Subtle background grid */}
       <div
