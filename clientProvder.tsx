@@ -7,7 +7,7 @@ import CartBadge from "@/app/components/CartBadge";
 export default function ClientProvider({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <div className="h-screen flex flex-col overflow-hidden">
+      <div className="h-dvh flex flex-col overflow-hidden">
 
         {/* Header */}
         <header className="bg-neutral-950 border-b border-neutral-800 px-4 sm:px-6 py-4 flex justify-between items-center shrink-0">
