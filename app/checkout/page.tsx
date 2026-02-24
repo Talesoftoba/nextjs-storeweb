@@ -125,7 +125,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 pb-20">
+    <div className="bg-neutral-950 text-neutral-200 pb-20">
       <Toaster
         position="top-right"
         toastOptions={{

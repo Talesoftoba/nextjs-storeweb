@@ -82,7 +82,7 @@ export default function OrderSuccessPage() {
 
   if (!orderId) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4">
+      <div className="bg-neutral-950 flex items-center justify-center px-4">
         <p className="text-neutral-500 text-sm tracking-wide">Missing order ID.</p>
       </div>
     );
@@ -90,7 +90,7 @@ export default function OrderSuccessPage() {
 
   if (loading || !order) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-4">
+      <div className="bg-neutral-950 flex flex-col items-center justify-center gap-4">
         <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
         <p className="text-neutral-500 text-xs tracking-widest uppercase">
           Loading order
@@ -102,7 +102,7 @@ export default function OrderSuccessPage() {
   const paymentStatus = order.payment?.status ?? "PENDING";
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 flex items-center justify-center px-4 py-20">
+    <div className="bg-neutral-950 text-neutral-200 flex items-center justify-center px-4 py-20">
       <Toaster
         position="top-right"
         toastOptions={{

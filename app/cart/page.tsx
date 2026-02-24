@@ -99,7 +99,7 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-4">
+      <div className="bg-neutral-950 flex flex-col items-center justify-center gap-4">
         <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
         <p className="text-neutral-500 text-xs tracking-widest uppercase">
           Loading your cart
@@ -110,7 +110,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="bg-neutral-950 flex flex-col items-center justify-center gap-4 px-6 text-center">
         <svg
           className="text-neutral-800 mb-2"
           width="64"
@@ -142,7 +142,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 pb-20">
+    <div className="bg-neutral-950 text-neutral-200 pb-20">
       <Toaster
         position="top-right"
         toastOptions={{

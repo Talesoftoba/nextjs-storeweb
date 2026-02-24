@@ -37,7 +37,7 @@ export default function DashboardClient({ initialProducts }: Props) {
   );
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 pb-20">
+    <div className="bg-neutral-950 text-neutral-200 pb-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-14">
 
         {/* Header */}

@@ -1,10 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { SessionProvider } from "next-auth/react";
 import Link from "next/link";
 import CartBadge from "@/app/components/CartBadge";
 
 export default function ClientProvider({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const main = document.querySelector("main");
+    if (main) main.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <SessionProvider>
       <div className="h-dvh flex flex-col">
