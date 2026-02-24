@@ -7,10 +7,10 @@ import CartBadge from "@/app/components/CartBadge";
 export default function ClientProvider({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <div className="h-dvh flex flex-col overflow-hidden">
+      <div className="h-dvh flex flex-col">
 
-        {/* Header */}
-        <header className="bg-neutral-950 border-b border-neutral-800 px-4 sm:px-6 py-4 flex justify-between items-center shrink-0">
+        {/* Fixed Frosted Header */}
+        <header className="fixed top-0 left-0 right-0 z-50 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-800 px-4 sm:px-6 py-4 flex justify-between items-center">
           <Link href="/" className="group flex items-center gap-1">
             <span className="text-lg font-light text-neutral-100 tracking-tight group-hover:text-amber-400 transition-colors duration-200">
               Market
@@ -32,9 +32,10 @@ export default function ClientProvider({ children }: { children: React.ReactNode
         </header>
 
         {/* Scrollable Main Content */}
-       <main className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
-  {children}
-</main>
+        <main className="flex-1 overflow-y-auto mt-14.25 [&::-webkit-scrollbar]:hidden">
+          {children}
+        </main>
+
       </div>
     </SessionProvider>
   );
