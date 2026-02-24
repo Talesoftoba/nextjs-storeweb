@@ -32,10 +32,9 @@ export default function ClientProvider({ children }: { children: React.ReactNode
         </header>
 
         {/* Scrollable Main Content */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
-
+       <main className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden">
+  {children}
+</main>
       </div>
     </SessionProvider>
   );
