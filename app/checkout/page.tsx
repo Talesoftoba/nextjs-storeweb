@@ -98,7 +98,7 @@ export default function CheckoutPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-4">
+      <div className="bg-neutral-950 flex flex-col items-center justify-center gap-4">
         <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
         <p className="text-neutral-500 text-xs tracking-widest uppercase">
           Loading checkout
@@ -109,7 +109,7 @@ export default function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="bg-neutral-950 flex flex-col items-center justify-center gap-4 px-6 text-center">
         <h2 className="text-3xl font-light text-neutral-100 tracking-tight">
           Your cart is empty
         </h2>
