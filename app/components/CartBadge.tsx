@@ -2,11 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
 import { Toaster } from "react-hot-toast";
 import { useSession } from "next-auth/react";
-import { ShoppingCart } from "lucide-react";
-
+import { ShoppingBag } from "lucide-react";
 
 type CartItem = { quantity: number };
 
@@ -27,7 +25,6 @@ export default function CartBadge() {
           setCount(0);
           return;
         }
-
         const data: CartItem[] = await res.json();
         const total = data.reduce((acc, item) => acc + item.quantity, 0);
         setCount(total);
@@ -39,14 +36,11 @@ export default function CartBadge() {
 
     initializeCart();
 
-    // ✅ ADD ITEM
     const handleCartUpdate = (e: Event) => {
       const detail = (e as CustomEvent).detail as number;
-      setCount(prev => prev + detail);
-     
+      setCount((prev) => prev + detail);
     };
 
-    // ✅ CLEAR CART
     const handleCartCleared = () => {
       setCount(0);
     };
@@ -63,14 +57,14 @@ export default function CartBadge() {
   return (
     <div className="relative">
       <Toaster position="top-right" />
-      <Link href="/cart" className="relative flex items-center">
-        <ShoppingCart
-      size={20} // smaller size (default is 24)
-      className="text-purple-400 hover:text-green-500 transition-colors duration-300"
-    />
+      <Link href="/cart" className="relative flex items-center group">
+        <ShoppingBag
+          size={20}
+          className="text-neutral-400 group-hover:text-amber-400 transition-colors duration-200"
+        />
         {count > 0 && (
-          <span className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full text-xs w-5 h-5 flex items-center justify-center font-bold">
-            {count}
+          <span className="absolute -top-2 -right-2 bg-amber-400 text-neutral-950 rounded-full text-[10px] w-4 h-4 flex items-center justify-center font-semibold leading-none">
+            {count > 99 ? "99+" : count}
           </span>
         )}
       </Link>
