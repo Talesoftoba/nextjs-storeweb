@@ -126,7 +126,7 @@ export default function PaymentClient() {
   // Error states
   if (!stripePromise) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4">
+      <div className="bg-neutral-950 flex items-center justify-center px-4">
         <p className="text-neutral-500 text-sm tracking-wide">Stripe key not configured.</p>
       </div>
     );
@@ -134,7 +134,7 @@ export default function PaymentClient() {
 
   if (!orderId) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4">
+      <div className="bg-neutral-950 flex items-center justify-center px-4">
         <p className="text-neutral-500 text-sm tracking-wide">Missing order ID.</p>
       </div>
     );
@@ -142,7 +142,7 @@ export default function PaymentClient() {
 
   if (!clientSecret) {
     return (
-      <div className="min-h-screen bg-neutral-950 flex flex-col items-center justify-center gap-4">
+      <div className="bg-neutral-950 flex flex-col items-center justify-center gap-4">
         <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
         <p className="text-neutral-500 text-xs tracking-widest uppercase">
           Loading payment
@@ -152,7 +152,7 @@ export default function PaymentClient() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-200 flex items-center justify-center px-4 py-20">
+    <div className="bg-neutral-950 text-neutral-200 flex items-center justify-center px-4 py-20">
       <Toaster
         position="top-right"
         toastOptions={{
