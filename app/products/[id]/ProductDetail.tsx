@@ -44,7 +44,7 @@ export default function ProductDetail({ product }: { product: Product }) {
   };
 
   return (
-    <div className="min-h-full bg-neutral-950 text-neutral-200 flex flex-col justify-center pb-24">
+    <div className="h-full bg-neutral-950 text-neutral-200 overflow-hidden">
       <Toaster
         position="top-right"
         toastOptions={{
@@ -57,12 +57,12 @@ export default function ProductDetail({ product }: { product: Product }) {
         }}
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 w-full">
+      <div className="h-full max-w-5xl mx-auto px-4 sm:px-6 py-6 flex flex-col w-full">
 
         {/* Back */}
         <button
           onClick={() => router.back()}
-          className="text-neutral-500 text-sm tracking-wide hover:text-neutral-300 transition-colors duration-200 mb-10 flex items-center gap-2"
+          className="text-neutral-500 text-sm tracking-wide hover:text-neutral-300 transition-colors duration-200 mb-6 flex items-center gap-2 shrink-0"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <line x1="19" y1="12" x2="5" y2="12" />
@@ -71,12 +71,12 @@ export default function ProductDetail({ product }: { product: Product }) {
           Back
         </button>
 
-        {/* Two column layout */}
-        <div className="flex flex-col md:flex-row gap-10 md:gap-16">
+        {/* Two column layout — fills remaining height */}
+        <div className="flex flex-col md:flex-row gap-6 md:gap-16 flex-1 overflow-hidden">
 
           {/* Left — Image */}
-          <div className="w-full md:w-1/2">
-            <div className="relative w-full h-64 sm:h-72 md:h-90 bg-neutral-900 rounded overflow-hidden">
+          <div className="w-full md:w-1/2 shrink-0">
+            <div className="relative w-full h-44 sm:h-56 md:h-full bg-neutral-900 rounded overflow-hidden">
               <Image
                 src={product.image || "/placeholder.png"}
                 alt={product.name}
@@ -94,20 +94,20 @@ export default function ProductDetail({ product }: { product: Product }) {
           </div>
 
           {/* Right — Details */}
-          <div className="w-full md:w-1/2 flex flex-col justify-center gap-5">
+          <div className="w-full md:w-1/2 flex flex-col justify-center gap-3 overflow-hidden">
 
             {/* Name */}
             <div>
-              <p className="text-amber-400 text-xs tracking-widest uppercase mb-2">
+              <p className="text-amber-400 text-xs tracking-widest uppercase mb-1">
                 {product.category || "Product"}
               </p>
-              <h1 className="text-4xl sm:text-5xl font-light text-neutral-100 tracking-tight leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-light text-neutral-100 tracking-tight leading-tight">
                 {product.name}
               </h1>
             </div>
 
             {/* Price */}
-            <p className="text-3xl font-light text-amber-400">
+            <p className="text-2xl font-light text-amber-400">
               ${product.price.toFixed(2)}
             </p>
 
@@ -115,7 +115,7 @@ export default function ProductDetail({ product }: { product: Product }) {
             <div className="w-full h-px bg-neutral-800" />
 
             {/* Description */}
-            <p className="text-neutral-400 text-sm leading-relaxed">
+            <p className="text-neutral-400 text-sm leading-relaxed line-clamp-3">
               {product.description || "No description available."}
             </p>
 
@@ -130,24 +130,24 @@ export default function ProductDetail({ product }: { product: Product }) {
             <div className="w-full h-px bg-neutral-800" />
 
             {/* Quantity + Add to Cart */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 
               {/* Quantity Control */}
               <div className="flex items-center border border-neutral-700 rounded overflow-hidden">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={quantity <= 1}
-                  className="w-10 h-11 bg-neutral-900 text-neutral-200 text-lg flex items-center justify-center hover:bg-amber-400 hover:text-neutral-950 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-10 h-10 bg-neutral-900 text-neutral-200 text-lg flex items-center justify-center hover:bg-amber-400 hover:text-neutral-950 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   −
                 </button>
-                <span className="w-12 h-11 flex items-center justify-center text-sm font-medium text-neutral-100 bg-neutral-950 border-x border-neutral-700">
+                <span className="w-12 h-10 flex items-center justify-center text-sm font-medium text-neutral-100 bg-neutral-950 border-x border-neutral-700">
                   {quantity}
                 </span>
                 <button
                   onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
                   disabled={quantity >= product.stock}
-                  className="w-10 h-11 bg-neutral-900 text-neutral-200 text-lg flex items-center justify-center hover:bg-amber-400 hover:text-neutral-950 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-10 h-10 bg-neutral-900 text-neutral-200 text-lg flex items-center justify-center hover:bg-amber-400 hover:text-neutral-950 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   +
                 </button>
