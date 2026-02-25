@@ -44,7 +44,7 @@ export default function ProductDetail({ product }: { product: Product }) {
   };
 
   return (
-    <div className="bg-neutral-950 text-neutral-200 pb-20">
+    <div className="bg-neutral-950 text-neutral-200">
       <Toaster
         position="top-right"
         toastOptions={{
