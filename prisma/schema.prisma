@@ -34,17 +34,17 @@ enum Role {
 
 // Products
 model Product {
-  id          String     @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   description String?
   price       Int
   image       String
-  stock       Int        @default(0)
+  stock       Int         @default(0)
   category    String?
   cartItems   CartItem[]
   orderItems  OrderItem[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 // Cart items
@@ -53,13 +53,14 @@ model CartItem {
   userId    String
   productId String
   quantity  Int      @default(1)
-  user      User     @relation(fields: [userId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([userId, productId])
 }
+
 model Order {
   id              String      @id @default(cuid())
   userId          String
@@ -78,9 +79,8 @@ model Order {
 
   orderItems       OrderItem[]
   payment          Payment?
-  user             User        @relation(fields: [userId], references: [id])
+  user             User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // ✅ Stripe paymentIntentId for webhook & sync
   paymentIntentId  String?     @unique
 
   createdAt        DateTime    @default(now())
@@ -91,11 +91,11 @@ model Order {
 model OrderItem {
   id        String   @id @default(cuid())
   orderId   String
-  productId String
+  productId String?
   quantity  Int
   price     Int
-  order     Order    @relation(fields: [orderId], references: [id])
-  product   Product  @relation(fields: [productId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -111,15 +111,15 @@ enum OrderStatus {
 
 // Stripe Payment
 model Payment {
-  id            String        @id @default(cuid())
-  orderId       String        @unique
-  stripePaymentId String      @unique
-  amount        Int
-  status        PaymentStatus @default(PENDING)
-  paymentIntent String?       // Stripe PaymentIntent ID if needed
-  order         Order         @relation(fields: [orderId], references: [id])
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  stripePaymentId String        @unique
+  amount          Int
+  status          PaymentStatus @default(PENDING)
+  paymentIntent   String?
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 // Payment status
@@ -128,4 +128,3 @@ enum PaymentStatus {
   SUCCESS
   FAILED
 }
-
