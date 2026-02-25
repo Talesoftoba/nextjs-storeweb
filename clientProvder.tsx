@@ -16,7 +16,7 @@ export default function ClientProvider({ children }: { children: React.ReactNode
 
   return (
     <SessionProvider>
-      <div className="h-dvh flex flex-col">
+      <div className="h-dvh flex flex-col overflow-hidden">
 
         {/* Fixed Frosted Header */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-neutral-950/80 backdrop-blur-md border-b border-neutral-800 px-4 sm:px-6 py-4 flex justify-between items-center">

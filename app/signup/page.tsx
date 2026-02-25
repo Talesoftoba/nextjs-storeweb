@@ -10,7 +10,7 @@ export default function SignupPage() {
   const [state, formAction] = React.useActionState(signupAction, initialState);
 
   return (
-    <div className="bg-neutral-950 flex items-center justify-center px-4 py-20 relative overflow-hidden">
+    <div className="h-full bg-neutral-950 flex items-center justify-center px-4 py-20 relative overflow-hidden">
 
       {/* Subtle background grid */}
       <div
