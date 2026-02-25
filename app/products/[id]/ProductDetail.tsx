@@ -44,7 +44,7 @@ export default function ProductDetail({ product }: { product: Product }) {
   };
 
   return (
-    <div className="h-full bg-neutral-950 text-neutral-200 pb-50">
+    <div className="min-h-full bg-neutral-950 text-neutral-200 flex flex-col justify-center pb-24">
       <Toaster
         position="top-right"
         toastOptions={{
@@ -57,7 +57,7 @@ export default function ProductDetail({ product }: { product: Product }) {
         }}
       />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-14">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 w-full">
 
         {/* Back */}
         <button
