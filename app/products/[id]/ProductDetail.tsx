@@ -71,12 +71,12 @@ export default function ProductDetail({ product }: { product: Product }) {
           Back
         </button>
 
-        {/* Two column layout — fills remaining height */}
-        <div className="flex flex-col md:flex-row gap-6 md:gap-16 flex-1 overflow-hidden">
+        {/* Two column layout */}
+        <div className="flex flex-col md:flex-row gap-6 md:gap-16 flex-1 overflow-hidden md:items-start">
 
           {/* Left — Image */}
           <div className="w-full md:w-1/2 shrink-0">
-            <div className="relative w-full h-44 sm:h-56 md:h-full bg-neutral-900 rounded overflow-hidden">
+            <div className="relative w-full h-44 sm:h-56 md:h-80 bg-neutral-900 rounded overflow-hidden">
               <Image
                 src={product.image || "/placeholder.png"}
                 alt={product.name}
@@ -94,7 +94,7 @@ export default function ProductDetail({ product }: { product: Product }) {
           </div>
 
           {/* Right — Details */}
-          <div className="w-full md:w-1/2 flex flex-col justify-center gap-3 overflow-hidden">
+          <div className="w-full md:w-1/2 flex flex-col gap-3 overflow-hidden">
 
             {/* Name */}
             <div>
