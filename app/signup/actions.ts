@@ -3,33 +3,45 @@
 import { db } from "../lib/db";
 import bcrypt from "bcrypt";
 import { redirect } from "next/navigation";
+import isEmail from "validator/lib/isEmail";
 
-type SignupState ={
-   error?: string;
-}
+type SignupState = {
+  error?: string;
+};
 
-export async function signupAction( 
-   prevState:SignupState,
-   formData:FormData
-    ):Promise<SignupState>{
-     const email = formData.get("email")?.toString().toLowerCase();
-     const password = formData.get("password")?.toString();
+export async function signupAction(
+  prevState: SignupState,
+  formData: FormData
+): Promise<SignupState> {
+  const email = formData.get("email")?.toString().toLowerCase().trim();
+  const password = formData.get("password")?.toString();
 
-     if (!email || !password){
-        return {error:"Email and Password are required"};
-     }
+  // Required check
+  if (!email || !password) {
+    return { error: "Email and password are required" };
+  }
 
-     const existing = await db.user.findUnique({ where:{email}});
-     if (existing) {
-      return{error:"User already exists"};
-     }
+  // Email format check using validator
+  if (!isEmail(email)) {
+    return { error: "Please enter a valid email address" };
+  }
 
-     const hashed = await bcrypt.hash(password,10);
+  // Password length check
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters" };
+  }
 
-     await db.user.create({
-        data:{email,password:hashed}
-     });
+  // Duplicate check
+  const existing = await db.user.findUnique({ where: { email } });
+  if (existing) {
+    return { error: "An account with this email already exists" };
+  }
 
-     //Redirect to login after successful signup
-     redirect("/login");
+  const hashed = await bcrypt.hash(password, 10);
+
+  await db.user.create({
+    data: { email, password: hashed },
+  });
+
+  redirect("/login");
 }
