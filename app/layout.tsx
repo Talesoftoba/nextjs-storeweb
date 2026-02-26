@@ -10,8 +10,19 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "My NextAuthApp.com",
-  description: "Example app with login, signup, and dashboard",
+  title: {
+    default: "MarketStore",
+    template: "%s | MarketStore", // each page title becomes "Products | MarketStore"
+  },
+  description: "Shop carefully selected products that bring style, comfort, and value to your everyday life.",
+  keywords: ["online store", "shop", "products", "ecommerce"],
+  openGraph: {
+    title: "MarketStore",
+    description: "Shop carefully selected products.",
+    url: "https://nextjs-storeweb.vercel.app",
+    siteName: "MarketStore",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

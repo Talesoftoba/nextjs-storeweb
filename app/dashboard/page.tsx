@@ -4,6 +4,7 @@ import { GET as nextAuthHandler } from "../api/auth/[...nextauth]/route"; // adj
 import { db } from "../lib/db";
 import DashboardClient from "./DashboardClient";
 import { Session } from "next-auth";
+import type { Metadata } from "next";
 
 // Define a type matching your Prisma Product
 type ProductType = {
@@ -13,6 +14,11 @@ type ProductType = {
   image: string;
   category: string | null;
   description: string | null;
+};
+
+export const metadata: Metadata = {
+  title: "Shop",
+  description: "Browse our full collection of products.",
 };
 
 export default async function DashboardPage() {
