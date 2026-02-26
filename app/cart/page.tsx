@@ -24,6 +24,7 @@ export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [checkingOut, setCheckingOut] = useState(false);
 
   const fetchCart = async () => {
     try {
@@ -52,9 +53,7 @@ export default function CartPage() {
       });
       if (!res.ok) throw new Error("Failed to update quantity");
 
-      // Sync cart badge
       window.dispatchEvent(new CustomEvent("cartUpdated"));
-
       fetchCart();
     } catch (err) {
       console.error(err);
@@ -72,9 +71,7 @@ export default function CartPage() {
       });
       if (!res.ok) throw new Error("Failed to remove item");
 
-      // Sync cart badge
       window.dispatchEvent(new CustomEvent("cartUpdated"));
-
       toast.success("Item removed");
       fetchCart();
     } catch (err) {
@@ -96,6 +93,10 @@ export default function CartPage() {
       console.error(err);
       toast.error("Failed to clear cart");
     }
+  };
+
+  const handleCheckout = () => {
+    setCheckingOut(true);
   };
 
   const totalPrice = items.reduce(
@@ -151,6 +152,13 @@ export default function CartPage() {
 
   return (
     <div className="bg-neutral-950 text-neutral-200 pb-20">
+      <style>{`
+        @keyframes breathe {
+          0%, 100% { opacity: 0.25; transform: scale(0.8); }
+          50%       { opacity: 1;    transform: scale(1.2); }
+        }
+      `}</style>
+
       <Toaster
         position="top-right"
         toastOptions={{
@@ -313,19 +321,43 @@ export default function CartPage() {
               Taxes and shipping calculated at checkout
             </p>
             <Link href="/checkout" className="w-full sm:w-auto mt-2">
-              <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-400 text-neutral-950 px-8 py-4 text-xs font-medium tracking-widest uppercase rounded hover:bg-amber-300 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-400/20">
-                Proceed to Checkout
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                  <polyline points="12 5 19 12 12 19" />
-                </svg>
+              <button
+                onClick={handleCheckout}
+                disabled={checkingOut}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-amber-400 text-neutral-950 px-8 py-4 text-xs font-medium tracking-widest uppercase rounded hover:bg-amber-300 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-400/20 disabled:opacity-70 disabled:cursor-default disabled:translate-y-0 disabled:shadow-none"
+              >
+                {checkingOut ? (
+                  <>
+                    <span className="tracking-widest lowercase">Checking ou...t</span>
+                    <span className="flex items-center gap-0.75">
+                      {[0, 1, 2].map((i) => (
+                        <span
+                          key={i}
+                          className="w-1 h-1 rounded-full bg-neutral-950"
+                          style={{
+                            animation: "breathe 1.6s ease-in-out infinite",
+                            animationDelay: `${i * 0.3}s`,
+                          }}
+                        />
+                      ))}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Proceed to Checkout
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                      <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                  </>
+                )}
               </button>
             </Link>
           </div>
