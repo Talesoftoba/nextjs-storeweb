@@ -9,6 +9,24 @@ type SignupState = {
   error?: string;
 };
 
+const ALLOWED_DOMAINS = [
+  "gmail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "yahoo.com",
+  "yahoo.co.uk",
+  "yahoo.co.in",
+  "icloud.com",
+  "me.com",
+  "mac.com",
+  "proton.me",
+  "protonmail.com",
+  "aol.com",
+  "msn.com",
+  "googlemail.com",
+];
+
 export async function signupAction(
   prevState: SignupState,
   formData: FormData
@@ -24,6 +42,12 @@ export async function signupAction(
   // Email format check using validator
   if (!isEmail(email)) {
     return { error: "Please enter a valid email address" };
+  }
+
+  // Whitelist check — only allow real email providers
+  const domain = email.split("@")[1];
+  if (!ALLOWED_DOMAINS.includes(domain)) {
+    return { error: "Please use a valid email provider (e.g. Gmail, Outlook, Yahoo)" };
   }
 
   // Password length check
