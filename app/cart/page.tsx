@@ -51,6 +51,10 @@ export default function CartPage() {
         body: JSON.stringify({ productId: itemId, quantity: newQty }),
       });
       if (!res.ok) throw new Error("Failed to update quantity");
+
+      // Sync cart badge
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
+
       fetchCart();
     } catch (err) {
       console.error(err);
@@ -67,6 +71,10 @@ export default function CartPage() {
         body: JSON.stringify({ productId: itemId }),
       });
       if (!res.ok) throw new Error("Failed to remove item");
+
+      // Sync cart badge
+      window.dispatchEvent(new CustomEvent("cartUpdated"));
+
       toast.success("Item removed");
       fetchCart();
     } catch (err) {
@@ -192,7 +200,7 @@ export default function CartPage() {
               }`}
             >
               <div className="flex flex-col sm:flex-row gap-5">
-                {/* Image — uses fill so no aspect ratio warning */}
+                {/* Image */}
                 <div className="relative w-full sm:w-36 h-52 sm:h-44 rounded overflow-hidden bg-neutral-900 shrink-0">
                   <Image
                     src={item.product.image || "/placeholder.png"}
