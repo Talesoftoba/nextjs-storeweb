@@ -61,6 +61,11 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Clear the cart after order is created
+    await db.cartItem.deleteMany({
+      where: { userId: session.user.id },
+    });
+
     return NextResponse.json({
       orderId: order.id,
       total,

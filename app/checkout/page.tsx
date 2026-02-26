@@ -86,6 +86,8 @@ export default function CheckoutPage() {
       });
       if (!res.ok) throw new Error("Failed to create order");
       const data = await res.json();
+      // Clear cart badge in header
+    window.dispatchEvent(new CustomEvent("cartCleared"));
       toast.success("Order created! Redirecting to payment...");
       router.push(`/payment?orderId=${data.orderId}`);
     } catch (err) {
