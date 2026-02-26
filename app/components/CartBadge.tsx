@@ -13,42 +13,39 @@ export default function CartBadge() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const initializeCart = async () => {
+    let cancelled = false;
+
+    const loadCount = async () => {
       if (!session?.user) {
-        setCount(0);
+        await Promise.resolve();
+        if (!cancelled) setCount(0);
         return;
       }
 
       try {
         const res = await fetch("/api/cart");
-        if (!res.ok) {
-          setCount(0);
-          return;
-        }
+        if (!res.ok || cancelled) return;
         const data: CartItem[] = await res.json();
         const total = data.reduce((acc, item) => acc + item.quantity, 0);
-        setCount(total);
+        if (!cancelled) setCount(total);
       } catch (err) {
         console.error("Failed to fetch cart:", err);
-        setCount(0);
       }
     };
 
-    initializeCart();
+    loadCount();
 
-    const handleCartUpdate = (e: Event) => {
-      const detail = (e as CustomEvent).detail as number;
-      setCount((prev) => prev + detail);
-    };
-
-    const handleCartCleared = () => {
-      setCount(0);
+    const handleCartUpdate = () => loadCount();
+    const handleCartCleared = async () => {
+      await Promise.resolve();
+      if (!cancelled) setCount(0);
     };
 
     window.addEventListener("cartUpdated", handleCartUpdate);
     window.addEventListener("cartCleared", handleCartCleared);
 
     return () => {
+      cancelled = true;
       window.removeEventListener("cartUpdated", handleCartUpdate);
       window.removeEventListener("cartCleared", handleCartCleared);
     };
